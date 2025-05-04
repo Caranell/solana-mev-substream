@@ -18,14 +18,13 @@ fn map_trades(trades: Vec<TradeData>) -> Result<Output, substreams::errors::Erro
     });
 }
 
-fn find_mev_bundles(trade_data: Vec<TradeData>) -> () {
-    let mut mev_bundles = Vec::new();
-
+fn find_mev_bundles(trade_data: Vec<TradeData>) -> Vec<MevBundle> {
     let mut arbitrage_bundles = Vec::new();
+    let mut sandwich_bundles = Vec::new();
 
     let mut arbitrage_sequence: Vec<TradeData> = Vec::new();
-
     let mut arbitrage_sequence_broken = true;
+
     for (idx, trade) in trade_data.iter().enumerate() {
         if let Some(prev_trade) = arbitrage_sequence.last() {
             if is_same_transaction(trade, prev_trade) {
@@ -61,7 +60,19 @@ fn find_mev_bundles(trade_data: Vec<TradeData>) -> () {
         }
     }
 
-    return ();
+    let block_date = trade_data[0].block_date.clone();
+    let block_time = trade_data[0].block_time;
+    let block_slot = trade_data[0].block_slot;
+
+    let formatted_arbitrage_bundles = arbitrage_bundles
+        .iter()
+        .map(|bundle| format_arbitrage_bundle(bundle, block_date, block_time, block_slot))
+        .collect();
+
+
+
+
+
 }
 
 fn is_same_transaction(trade: &TradeData, prev_trade: &TradeData) -> bool {
@@ -72,39 +83,40 @@ fn is_same_transaction(trade: &TradeData, prev_trade: &TradeData) -> bool {
     return false;
 }
 
+fn format_arbitrage_bundle(
+    arbitrage_trades: Vec<TradeData>,
+    block_date: String,
+    block_time: i64,
+    block_slot: u64,
+) -> MevBundle {
+    let bundle = MevBundle {
+        block_date: block_date,
+        block_time: block_time,
+        block_slot: block_slot,
+        signer: arbitrage_trades[0].signer.clone(),
+        trader: arbitrage_trades[0].trader.clone(),
+        mev_type: "arbitrage".to_string(),
+        trades: arbitrage_trades,
+    };
 
-fn process_mev_trades(trade_data: Vec<TradeData>) -> Vec<MevBundle> {
-    let mut mev_trades = HashMap::new();
-    for trade in trade_data {
-        let signer = trade.signer.clone();
-        let signer_trades = mev_trades.entry(signer).or_insert(vec![]);
+    return bundle;
+}
 
-        signer_trades.push(trade);
-    }
+fn format_sandwich_bundle(
+    sandwich_trades: Vec<TradeData>,
+    block_date: String,
+    block_time: i64,
+    block_slot: u64,
+) -> MevBundle {
+    let bundle = MevBundle {
+        block_date: block_date,
+        block_time: block_time,
+        block_slot: block_slot,
+        signer: sandwich_trades[0].signer.clone(),
+        trader: sandwich_trades[0].trader.clone(),
+        mev_type: "sandwich".to_string(),
+        trades: sandwich_trades,
+    };
 
-    // filter out signers with only 1 trade
-    mev_trades.retain(|_, trades| trades.len() > 1);
-
-    let mut arbitrage_trades = Vec::new();
-    for (signer, trades) in mev_trades {
-        let trades = trades.clone();
-
-        // group trades by tx_index
-        let mut trades_by_tx_index = HashMap::new();
-        for trade in trades {
-            let tx_index = trade.tx_index;
-            let trade_data = trades_by_tx_index.entry(tx_index).or_insert(vec![]);
-            trade_data.push(trade);
-        }
-
-        // for each tx_index, if there're multiple trades, it's arbitrage
-        for (tx_index, trades) in trades_by_tx_index {
-            if trades.len() > 1 {
-                let result = get_arbitrage_summary(trades);
-                arbitrage_trades.push(result);
-            }
-        }
-    }
-
-    return arbitrage_trades;
+    return bundle;
 }
