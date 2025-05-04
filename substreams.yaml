@@ -1,48 +1,28 @@
 specVersion: v0.1.0
 package:
-  name: "substreams_template"
-  version: v0.1.0
-
-imports:
-  database_change: https://github.com/streamingfast/substreams-sink-database-changes/releases/download/v1.2.1/substreams-database-change-v1.2.1.spkg
+  name: 'tl_solana_dex_trades_extended_1_0_6'
+  version: v1.0.6
 
 protobuf:
   files:
-    - erc721.proto
+    - output.proto
   importPaths:
     - ./proto
 
 binaries:
   default:
     type: wasm/rust-v1
-    file: ./target/wasm32-unknown-unknown/release/substreams.wasm
+    file: target/wasm32-unknown-unknown/release/substreams.wasm
+
+imports:
+  sol: https://spkg.io/streamingfast/solana-common-v0.3.0.spkg
 
 modules:
-  - name: map_transfers
+  - name: map_block
     kind: map
-    initialBlock: 12287507
     inputs:
-      - source: sf.ethereum.type.v2.Block
+      - map: sol:blocks_without_votes
     output:
-      type: proto:eth.erc721.v1.Transfers
+      type: proto:sf.solana.dex.trades.v1.Output
 
-  - name: store_transfers
-    kind: store
-    initialBlock: 12287507
-    updatePolicy: add
-    valueType: int64
-    inputs:
-      - map: map_transfers
-
-  - name: db_out
-    kind: map
-    initialBlock: 12287507
-    inputs:
-      - source: sf.substreams.v1.Clock
-      - map: map_transfers
-      - store: store_transfers
-        mode: deltas
-    output:
-      type: proto:sf.substreams.sink.database.v1.DatabaseChanges
-
-network: mainnet
+network: solana
