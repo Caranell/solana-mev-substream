@@ -1,9 +1,18 @@
-syntax = "proto3";
+syntax = "proto2";
 
-package caranell.solana.mev.bundles.v1;
+package solana.mev.bundles.v1;
+
+message DexTradesOutput {
+  repeated TradeData data = 1;
+}
 
 message Output {
-  repeated MevBundle bundles = 1;
+  repeated MevBundle data = 1;
+}
+
+enum MevType {
+  ARBITRAGE = 1;
+  SANDWICH = 2;
 }
 
 message MevBundle {
@@ -12,12 +21,11 @@ message MevBundle {
   required uint64 block_slot = 3;
   required string signer = 6;
   required string trader = 7;
-  required string mev_type = 8;
+  required MevType mev_type = 8;
   repeated TradeData trades = 9;
 }
 
 message MevBundleSummary {}
-
 
 message TradeData {
   required string block_date = 1;

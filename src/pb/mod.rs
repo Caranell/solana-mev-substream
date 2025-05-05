@@ -1,17 +1,4 @@
 // @generated
-pub mod caranell {
-    pub mod solana {
-        pub mod mev {
-            pub mod bundles {
-                // @@protoc_insertion_point(attribute:caranell.solana.mev.bundles.v1)
-                pub mod v1 {
-                    include!("caranell.solana.mev.bundles.v1.rs");
-                    // @@protoc_insertion_point(caranell.solana.mev.bundles.v1)
-                }
-            }
-        }
-    }
-}
 pub mod sf {
     pub mod solana {
         pub mod r#type {
@@ -36,6 +23,17 @@ pub mod sol {
         pub mod v1 {
             include!("sol.transactions.v1.rs");
             // @@protoc_insertion_point(sol.transactions.v1)
+        }
+    }
+}
+pub mod solana {
+    pub mod mev {
+        pub mod bundles {
+            // @@protoc_insertion_point(attribute:solana.mev.bundles.v1)
+            pub mod v1 {
+                include!("solana.mev.bundles.v1.rs");
+                // @@protoc_insertion_point(solana.mev.bundles.v1)
+            }
         }
     }
 }

@@ -1,19 +1,15 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
-#![allow(non_snake_case)]
-
 mod pb;
-// mod utils;
+mod utils;
 
-use pb::caranell::solana::mev::bundles::v1::{MevBundle, Output, TradeData};
+use pb::solana::mev::bundles::v1::{DexTradesOutput, MevBundle, MevType, Output, TradeData};
+use utils::{format_bundle, is_same_transaction};
 
 #[substreams::handlers::map]
-fn map_trades(trades: TradeData) -> Result<Output, substreams::errors::Error> {
-    let mev_bundles = find_mev_bundles(vec![trades]);
+fn map_dex_trades(dex_trades_data: DexTradesOutput) -> Result<Output, substreams::errors::Error> {
+    let dex_trades = dex_trades_data.data;
+    let mev_bundles = find_mev_bundles(dex_trades);
 
-    return Ok(Output {
-        bundles: mev_bundles,
-    });
+    return Ok(Output { data: mev_bundles });
 }
 
 fn find_mev_bundles(trade_data: Vec<TradeData>) -> Vec<MevBundle> {
@@ -58,41 +54,29 @@ fn find_mev_bundles(trade_data: Vec<TradeData>) -> Vec<MevBundle> {
         }
     }
 
-    let mut formatted_bundles = Vec::new();
+    let mut formatted_bundles: Vec<MevBundle> = Vec::new();
     formatted_bundles.extend(
         arbitrage_bundles
             .iter()
-            .map(|bundle| format_bundle(bundle, "arbitrage".to_string()))
+            .map(|bundle| {
+                format_bundle(
+                    bundle,
+                    MevType::from_str_name(MevType::Arbitrage.as_str_name()).unwrap(),
+                )
+            })
             .collect::<Vec<_>>(),
     );
     formatted_bundles.extend(
         sandwich_bundles
             .iter()
-            .map(|bundle| format_bundle(bundle, "sandwich".to_string()))
+            .map(|bundle| {
+                format_bundle(
+                    bundle,
+                    MevType::from_str_name(MevType::Sandwich.as_str_name()).unwrap(),
+                )
+            })
             .collect::<Vec<_>>(),
     );
 
     return formatted_bundles;
-}
-
-fn is_same_transaction(trade: &TradeData, prev_trade: &TradeData) -> bool {
-    if trade.tx_index == prev_trade.tx_index && trade.signer == prev_trade.signer {
-        return true;
-    }
-
-    return false;
-}
-
-fn format_bundle(mev_bundle: &Vec<TradeData>, mev_type: String) -> MevBundle {
-    let bundle = MevBundle {
-        block_date: mev_bundle[0].block_date.clone(),
-        block_time: mev_bundle[0].block_time,
-        block_slot: mev_bundle[0].block_slot,
-        signer: mev_bundle[0].signer.clone(),
-        trader: mev_bundle[0].trader.clone(),
-        mev_type: mev_type,
-        trades: mev_bundle.clone(),
-    };
-
-    return bundle;
 }
