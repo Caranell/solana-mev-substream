@@ -5,7 +5,7 @@ package:
 
 protobuf:
   files:
-    - output.proto
+    - stream_output.proto
   importPaths:
     - ./proto
 
@@ -15,14 +15,14 @@ binaries:
     file: target/wasm32-unknown-unknown/release/substreams.wasm
 
 imports:
-  sol: https://spkg.io/streamingfast/solana-common-v0.3.0.spkg
+  dex: tl-solana-dex-trades-extended-1-0-6-v1.0.6.spkg
 
 modules:
-  - name: map_block
+  - name: map_dex_trades
     kind: map
     inputs:
-      - map: sol:blocks_without_votes
+      - map: dex:map_block
     output:
-      type: proto:sf.solana.dex.trades.v1.Output
+      type: proto:solana.mev.bundles.v1.Output
 
 network: solana

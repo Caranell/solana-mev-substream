@@ -7,38 +7,31 @@ use utils::{format_bundle, is_same_transaction};
 #[substreams::handlers::map]
 fn map_dex_trades(dex_trades_data: DexTradesOutput) -> Result<Output, substreams::errors::Error> {
     let dex_trades = dex_trades_data.data;
-    let mev_bundles = find_mev_bundles(dex_trades);
+    let mev_bundles = find_mev_bundles(&dex_trades);
 
     return Ok(Output { data: mev_bundles });
 }
 
-fn find_mev_bundles(trade_data: Vec<TradeData>) -> Vec<MevBundle> {
+fn find_mev_bundles(trade_data: &[TradeData]) -> Vec<MevBundle> {
     let mut arbitrage_bundles: Vec<Vec<TradeData>> = Vec::new();
     let mut sandwich_bundles: Vec<Vec<TradeData>> = Vec::new();
 
     let mut arbitrage_sequence: Vec<TradeData> = Vec::new();
-    let mut arbitrage_sequence_broken = true;
 
     for (idx, trade) in trade_data.iter().enumerate() {
         if let Some(prev_trade) = arbitrage_sequence.last() {
             if is_same_transaction(trade, prev_trade) {
                 arbitrage_sequence.push(trade.clone());
-                arbitrage_sequence_broken = false;
+            } else {
+                if arbitrage_sequence.len() > 1 {
+                    arbitrage_bundles.push(arbitrage_sequence.clone());
+                } else {
+                    arbitrage_sequence.clear();
+                }
+                arbitrage_sequence.push(trade.clone());
             }
         } else {
-            // it's potential first trade in a sequence
             arbitrage_sequence.push(trade.clone());
-            arbitrage_sequence_broken = false;
-        }
-
-        if arbitrage_sequence_broken {
-            // sequence broken, check if the completed sequence was an arbitrage (>= 2 trades)
-            if arbitrage_sequence.len() > 1 {
-                arbitrage_bundles.push(arbitrage_sequence);
-                break;
-            }
-
-            arbitrage_sequence = vec![trade.clone()];
         }
 
         // Sandwich detection
