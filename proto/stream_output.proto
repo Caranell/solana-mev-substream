@@ -19,10 +19,11 @@ message MevBundle {
   required string block_date = 1;
   required int64 block_time = 2;
   required uint64 block_slot = 3;
-  required string signer = 6;
-  required string trader = 7;
-  required MevType mev_type = 8;
-  repeated TradeData trades = 9;
+  required string signer = 4;
+  required string trader = 5;
+  required MevType mev_type = 6;
+  repeated TradeData trades = 8;
+  optional string bundle_id = 9;
 }
 
 message MevBundleSummary {}
@@ -53,6 +54,7 @@ message TradeData {
   repeated string outer_executing_accounts = 23;
   required int64 trader_lamports_change = 24;
   repeated TraderTokenBalanceChange trader_token_balance_changes = 25;
+  optional string bundle_id = 26;
 }
 
 message TraderTokenBalanceChange {

@@ -6,4 +6,3 @@ buf.gen.yaml
 *.spkg
 .substreams.env
 *.json
-!solana-mev-bundles-1-0-0-v1.0.0.spkg

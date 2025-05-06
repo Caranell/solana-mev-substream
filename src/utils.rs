@@ -1,5 +1,7 @@
 use std::collections::HashSet;
 
+use sha2::{Digest, Sha256};
+
 use crate::pb::solana::mev::bundles::v1::{MevBundle, MevType, TradeData};
 
 pub fn is_same_transaction(trade: &TradeData, prev_trade: &TradeData) -> bool {
@@ -43,14 +45,21 @@ pub fn is_valid_arbitrage_sequence(sequence: &Vec<TradeData>) -> bool {
 }
 
 pub fn format_bundle(mev_bundle: &Vec<TradeData>, mev_type: MevType) -> MevBundle {
+    let bundle_id = format!("{:x}", Sha256::digest(mev_bundle[0].tx_id.as_bytes()));
+
     let bundle = MevBundle {
+        bundle_id: Some(bundle_id.clone()),
         block_date: mev_bundle[0].block_date.clone(),
         block_time: mev_bundle[0].block_time,
         block_slot: mev_bundle[0].block_slot,
         signer: mev_bundle[0].signer.clone(),
         trader: mev_bundle[0].trader.clone(),
         mev_type: mev_type as i32,
-        trades: mev_bundle.clone(),
+        trades: mev_bundle.iter().map(|trade| {
+            let mut trade = trade.clone();
+            trade.bundle_id = Some(bundle_id.clone());
+            trade
+        }).collect(),
     };
 
     return bundle;

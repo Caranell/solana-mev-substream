@@ -52,7 +52,9 @@ fn find_mev_bundles(trade_data: &[TradeData]) -> Vec<MevBundle> {
         }
     }
 
-    //FIXME add check for last trade in arbitrage sequence
+    if is_valid_arbitrage_sequence(&arbitrage_sequence) {
+        arbitrage_bundles.push(arbitrage_sequence);
+    }
 
     let mut formatted_bundles: Vec<MevBundle> = Vec::new();
     formatted_bundles.extend(
