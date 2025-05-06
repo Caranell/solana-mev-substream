@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS "Output" (
+  "id" VARCHAR(64),
+  PRIMARY KEY (id)
+)

@@ -1,0 +1,43 @@
+
+# substreams.yaml
+specVersion: v0.1.0
+package:
+  name: solana_mev_bundles_1_0_0_sql
+  version: v0.1.0
+
+protobuf:
+  excludePaths:
+    - sf/substreams/sink
+    - sf/substreams/v1
+    - sf/substreams/index
+    - sf/substreams/intern
+    - google
+
+network: solana
+imports:
+  sql: https://github.com/streamingfast/substreams-sink-sql/releases/download/protodefs-v1.0.7/substreams-sink-sql-protodefs-v1.0.7.spkg
+  database_change: https://github.com/streamingfast/substreams-sink-database-changes/releases/download/v1.2.1/substreams-database-change-v1.2.1.spkg
+  solana_mev_bundles_1_0_0: ../solana-mev-bundles-1-0-0-v1.0.0.spkg
+
+binaries:
+  default:
+    type: wasm/rust-v1
+    file: target/wasm32-unknown-unknown/release/solana_mev_bundles_1_0_0_sql.wasm
+
+modules:
+  - name: db_out
+    kind: map
+    initialBlock: 0
+    inputs:
+      - map: solana_mev_bundles_1_0_0:map_dex_trades
+    output:
+      type: proto:sf.substreams.sink.database.v1.DatabaseChanges
+
+sink:
+  module: db_out
+  type: sf.substreams.sink.sql.v1.Service
+  config:
+    schema: "./schema.sql"
+    engine: postgres
+    postgraphile_frontend:
+      enabled: true
