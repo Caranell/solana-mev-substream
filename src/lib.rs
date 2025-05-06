@@ -6,7 +6,9 @@ use utils::{format_bundle, is_same_transaction, is_valid_arbitrage_sequence};
 
 #[substreams::handlers::map]
 fn map_dex_trades(dex_trades_data: DexTradesOutput) -> Result<Output, substreams::errors::Error> {
-    let dex_trades = dex_trades_data.data;
+    let mut dex_trades = dex_trades_data.data;
+    update_dex_trades_quotes(&mut dex_trades);
+
     let mev_bundles = find_mev_bundles(&dex_trades);
 
     return Ok(Output { data: mev_bundles });
@@ -77,4 +79,12 @@ fn find_mev_bundles(trade_data: &[TradeData]) -> Vec<MevBundle> {
     );
 
     return formatted_bundles;
+}
+
+// For some reason, dex_trades has inverted signs for quote_amount and base_amount
+fn update_dex_trades_quotes(trade_data: &mut [TradeData]) {
+    for trade in trade_data.iter_mut() {
+        trade.quote_amount = -1.0 * trade.quote_amount;
+        trade.base_amount = -1.0 * trade.base_amount;
+    }
 }
