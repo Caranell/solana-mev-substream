@@ -42,7 +42,7 @@ pub struct TradeData {
     #[prost(string, required, tag="16")]
     pub instruction_type: ::prost::alloc::string::String,
     #[prost(uint32, required, tag="17")]
-    pub inner_instruxtion_index: u32,
+    pub inner_instruction_index: u32,
     #[prost(string, required, tag="18")]
     pub outer_program: ::prost::alloc::string::String,
     #[prost(string, required, tag="19")]

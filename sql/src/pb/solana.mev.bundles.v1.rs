@@ -21,14 +21,16 @@ pub struct MevBundle {
     pub block_time: i64,
     #[prost(uint64, required, tag="3")]
     pub block_slot: u64,
-    #[prost(string, required, tag="6")]
+    #[prost(string, required, tag="4")]
     pub signer: ::prost::alloc::string::String,
-    #[prost(string, required, tag="7")]
+    #[prost(string, required, tag="5")]
     pub trader: ::prost::alloc::string::String,
-    #[prost(enumeration="MevType", required, tag="8")]
+    #[prost(enumeration="MevType", required, tag="6")]
     pub mev_type: i32,
-    #[prost(message, repeated, tag="9")]
+    #[prost(message, repeated, tag="8")]
     pub trades: ::prost::alloc::vec::Vec<TradeData>,
+    #[prost(string, optional, tag="9")]
+    pub bundle_id: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
@@ -70,7 +72,7 @@ pub struct TradeData {
     #[prost(string, required, tag="16")]
     pub instruction_type: ::prost::alloc::string::String,
     #[prost(uint32, required, tag="17")]
-    pub inner_instruxtion_index: u32,
+    pub inner_instruction_index: u32,
     #[prost(string, required, tag="18")]
     pub outer_program: ::prost::alloc::string::String,
     #[prost(string, required, tag="19")]
@@ -87,6 +89,8 @@ pub struct TradeData {
     pub trader_lamports_change: i64,
     #[prost(message, repeated, tag="25")]
     pub trader_token_balance_changes: ::prost::alloc::vec::Vec<TraderTokenBalanceChange>,
+    #[prost(string, optional, tag="26")]
+    pub bundle_id: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]

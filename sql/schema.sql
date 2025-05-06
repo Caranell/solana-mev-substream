@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS "mev_bundles" (
   "mev_type" TEXT NOT NULL -- Type of MEV (e.g., ARBITRAGE, SANDWICH)
 );
 
-CREATE TABLE trade_data (
+CREATE TABLE trades (
   "bundle_id" TEXT NOT NULL,
   "block_date" TEXT NOT NULL,
   "block_time" BIGINT NOT NULL,
@@ -34,6 +34,5 @@ CREATE TABLE trade_data (
   "trader" TEXT NOT NULL,
   "outer_executing_accounts" TEXT[], -- Array of TEXT
   "trader_lamports_change" BIGINT NOT NULL,
-  "trader_token_balance_changes" TEXT, -- JSON string array of trader token balance changes
-  FOREIGN KEY ("bundle_id") REFERENCES "mev_bundles"("bundle_id")
+  "trader_token_balance_changes" JSONB -- JSON string array of trader token balance changes
 );

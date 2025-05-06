@@ -45,7 +45,7 @@ message TradeData {
   required bool is_inner_instruction = 14;
   required uint32 instruction_index = 15;
   required string instruction_type = 16;
-  required uint32 inner_instruxtion_index = 17;
+  required uint32 inner_instruction_index = 17;
   required string outer_program = 18;
   required string inner_program = 19;
   required uint64 txn_fee_lamports = 20;
