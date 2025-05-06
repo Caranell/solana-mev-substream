@@ -6,3 +6,4 @@ buf.gen.yaml
 *.spkg
 .substreams.env
 *.json
+*.js
