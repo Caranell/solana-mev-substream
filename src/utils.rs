@@ -8,6 +8,18 @@ pub fn is_same_transaction(trade: &TradeData, prev_trade: &TradeData) -> bool {
   return false;
 }
 
+pub fn is_valid_arbitrage_sequence(sequence: &Vec<TradeData>) -> bool {
+  if sequence.len()<2 {
+    return false;
+  }
+
+  if !sequence.iter().all(|trade| trade.is_inner_instruction && trade.signer == trade.trader) {
+    return false;
+  }
+
+  return true;
+}
+
 pub fn format_bundle(mev_bundle: &Vec<TradeData>, mev_type: MevType) -> MevBundle {
   let bundle = MevBundle {
       block_date: mev_bundle[0].block_date.clone(),

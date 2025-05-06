@@ -2,7 +2,7 @@ mod pb;
 mod utils;
 
 use pb::solana::mev::bundles::v1::{DexTradesOutput, MevBundle, MevType, Output, TradeData};
-use utils::{format_bundle, is_same_transaction};
+use utils::{format_bundle, is_same_transaction, is_valid_arbitrage_sequence};
 
 #[substreams::handlers::map]
 fn map_dex_trades(dex_trades_data: DexTradesOutput) -> Result<Output, substreams::errors::Error> {
@@ -21,16 +21,19 @@ fn find_mev_bundles(trade_data: &[TradeData]) -> Vec<MevBundle> {
     for (idx, trade) in trade_data.iter().enumerate() {
         if let Some(prev_trade) = arbitrage_sequence.last() {
             if is_same_transaction(trade, prev_trade) {
+                // found second trade in arbitrage
                 arbitrage_sequence.push(trade.clone());
             } else {
-                if arbitrage_sequence.len() > 1 {
+                if is_valid_arbitrage_sequence(&arbitrage_sequence) {
+                    // found a full arbitrage sequence, push to bundles
                     arbitrage_bundles.push(arbitrage_sequence.clone());
-                } else {
-                    arbitrage_sequence.clear();
                 }
-                arbitrage_sequence.push(trade.clone());
+
+                // start a new sequence
+                arbitrage_sequence = vec![trade.clone()];
             }
         } else {
+            // first trade in possible arbitrage
             arbitrage_sequence.push(trade.clone());
         }
 
@@ -46,6 +49,8 @@ fn find_mev_bundles(trade_data: &[TradeData]) -> Vec<MevBundle> {
             }
         }
     }
+
+    //FIXME add check for last trade in arbitrage sequence
 
     let mut formatted_bundles: Vec<MevBundle> = Vec::new();
     formatted_bundles.extend(
