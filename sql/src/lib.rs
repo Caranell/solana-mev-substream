@@ -34,7 +34,12 @@ fn create_db_changes_for_bundle(
     let bundle_id = bundle.bundle_id.unwrap();
 
     database_changes
-        .push_change("mev_bundles", bundle_id.clone(), *change_index, Operation::Create)
+        .push_change(
+            "mev_bundles",
+            bundle_id.clone(),
+            *change_index,
+            Operation::Create,
+        )
         .change("bundle_id", (None, bundle_id.clone()))
         .change("block_date", (None, bundle.block_date))
         .change("block_time", (None, bundle.block_time))
@@ -55,8 +60,10 @@ fn create_db_changes_for_trade(
     database_changes: &mut DatabaseChanges,
     change_index: &mut u64,
 ) {
+    let pk = format!("{}{}", trade.tx_id, trade.inner_instruction_index);
+
     database_changes
-        .push_change("trades", trade.tx_id.clone(), *change_index, Operation::Create)
+        .push_change("trades", pk, *change_index, Operation::Create)
         .change("bundle_id", (None, trade.bundle_id.unwrap()))
         .change("block_date", (None, trade.block_date))
         .change("block_time", (None, trade.block_time))
@@ -94,10 +101,10 @@ fn create_db_changes_for_trade(
             "trader_lamports_change",
             (None, trade.trader_lamports_change),
         );
-        // .change(
-        //     "trader_token_balance_changes",
-        //     (None, trade.trader_token_balance_changes),
-        // );
+    // .change(
+    //     "trader_token_balance_changes",
+    //     (None, trade.trader_token_balance_changes),
+    // );
 
     *change_index += 1;
 }

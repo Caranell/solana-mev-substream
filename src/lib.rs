@@ -2,7 +2,7 @@ mod pb;
 mod utils;
 
 use pb::solana::mev::bundles::v1::{DexTradesOutput, MevBundle, MevType, Output, TradeData};
-use utils::{format_bundle, is_same_transaction, is_valid_arbitrage_sequence};
+use utils::{format_bundle, is_same_transaction, is_sandwich_sequence, is_valid_arbitrage_sequence};
 
 #[substreams::handlers::map]
 fn map_dex_trades(dex_trades_data: DexTradesOutput) -> Result<Output, substreams::errors::Error> {
@@ -45,8 +45,7 @@ fn find_mev_bundles(trade_data: &[TradeData]) -> Vec<MevBundle> {
             let trade_b = &trade_data[idx - 1];
             let trade_c = &trade_data[idx];
 
-            // Core sandwich condition: A and C have same signer, different from B's signer
-            if trade_a.signer == trade_c.signer && trade_a.signer != trade_b.signer {
+            if is_sandwich_sequence(trade_a, trade_b, trade_c) {
                 sandwich_bundles.push(vec![trade_a.clone(), trade_b.clone(), trade_c.clone()]);
             }
         }
@@ -57,6 +56,7 @@ fn find_mev_bundles(trade_data: &[TradeData]) -> Vec<MevBundle> {
     }
 
     let mut formatted_bundles: Vec<MevBundle> = Vec::new();
+
     formatted_bundles.extend(
         arbitrage_bundles
             .iter()

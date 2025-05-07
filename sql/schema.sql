@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS "mev_bundles" (
 );
 
 CREATE TABLE trades (
+  "id" TEXT PRIMARY KEY,
   "bundle_id" TEXT NOT NULL,
   "block_date" TEXT NOT NULL,
   "block_time" BIGINT NOT NULL,

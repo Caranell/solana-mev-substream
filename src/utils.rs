@@ -44,8 +44,18 @@ pub fn is_valid_arbitrage_sequence(sequence: &Vec<TradeData>) -> bool {
     return true;
 }
 
+pub fn is_sandwich_sequence(trade_a: &TradeData, trade_b: &TradeData, trade_c: &TradeData) -> bool {
+    // By "MEV sanwich" defenition, first & last trades are made by same signer, while in the middle is their "victim"
+    if trade_a.signer == trade_c.signer && trade_a.signer != trade_b.signer {
+        return true;
+    }
+
+    return false;
+}
+
 pub fn format_bundle(mev_bundle: &Vec<TradeData>, mev_type: MevType) -> MevBundle {
-    let bundle_id = format!("{:x}", Sha256::digest(mev_bundle[0].tx_id.as_bytes()));
+    let bundle_id = format!("{:x}", Sha256::digest(mev_bundle[0].tx_id.clone()));
+
 
     let bundle = MevBundle {
         bundle_id: Some(bundle_id.clone()),
