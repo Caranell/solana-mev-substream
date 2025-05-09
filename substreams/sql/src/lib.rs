@@ -22,7 +22,7 @@ fn get_db_changes_from_bundles(
     change_index: &mut u64,
 ) {
     for bundle in bundles {
-        create_db_changes_for_bundle(bundle, database_changes, change_index);
+                create_db_changes_for_bundle(bundle, database_changes, change_index);
     }
 }
 
@@ -40,7 +40,7 @@ fn create_db_changes_for_bundle(
             *change_index,
             Operation::Create,
         )
-        .change("bundle_id", (None, bundle_id.clone()))
+        .change("id", (None, bundle_id.clone()))
         .change("block_date", (None, bundle.block_date))
         .change("block_time", (None, bundle.block_time))
         .change("block_slot", (None, bundle.block_slot))
@@ -60,10 +60,10 @@ fn create_db_changes_for_trade(
     database_changes: &mut DatabaseChanges,
     change_index: &mut u64,
 ) {
-    let pk = format!("{}{}", trade.tx_id, trade.inner_instruction_index);
+    let pk = format!("{}{}", trade.tx_id, change_index);
 
     database_changes
-        .push_change("trades", pk, *change_index, Operation::Create)
+        .push_change("trades", pk.clone(), *change_index, Operation::Create)
         .change("bundle_id", (None, trade.bundle_id.unwrap()))
         .change("block_date", (None, trade.block_date))
         .change("block_time", (None, trade.block_time))

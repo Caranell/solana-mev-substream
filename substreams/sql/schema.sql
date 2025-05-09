@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS "mev_bundles" (
-  "bundle_id" TEXT PRIMARY KEY, -- Unique identifier for the bundle
+  "id" TEXT PRIMARY KEY,
+  "bundle_id" TEXT NOT NULL, -- Unique identifier for the bundle
   "block_date" TEXT NOT NULL,
   "block_time" BIGINT NOT NULL,
   "block_slot" BIGINT NOT NULL,
