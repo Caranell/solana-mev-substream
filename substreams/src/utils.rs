@@ -36,7 +36,7 @@ pub fn is_valid_arbitrage_sequence(sequence: &Vec<TradeData>) -> bool {
     unique_traded_tokens.insert(last_trade.quote_mint.clone());
 
     // atomic arbitrage should always start&end with the same token
-    // only possible arbitrage sequences are: a->b & b->a or a->b & b->c & c->a
+    // only possible arbitrage sequences are: a->b & b->a OR a->b & [b->c] & c->a
     if unique_traded_tokens.len() == 4 {
         return false;
     }
@@ -46,11 +46,25 @@ pub fn is_valid_arbitrage_sequence(sequence: &Vec<TradeData>) -> bool {
 
 pub fn is_sandwich_sequence(trade_a: &TradeData, trade_b: &TradeData, trade_c: &TradeData) -> bool {
     // By "MEV sanwich" defenition, first & last trades are made by same signer, while in the middle is their "victim"
-    if trade_a.signer == trade_c.signer && trade_a.signer != trade_b.signer {
-        return true;
+    if trade_a.signer != trade_c.signer || trade_a.signer == trade_b.signer {
+        return false;
     }
 
-    return false;
+    let mut unique_traded_tokens: HashSet<String> = HashSet::new();
+    unique_traded_tokens.insert(trade_a.base_mint.clone());
+    unique_traded_tokens.insert(trade_a.quote_mint.clone());
+    unique_traded_tokens.insert(trade_b.base_mint.clone());
+    unique_traded_tokens.insert(trade_b.quote_mint.clone());
+    unique_traded_tokens.insert(trade_c.base_mint.clone());
+    unique_traded_tokens.insert(trade_c.quote_mint.clone());
+    
+    // sandwiches should only have 2 unique traded tokens
+    if unique_traded_tokens.len() != 2  {
+        return false;
+    }
+
+
+    return true;
 }
 
 pub fn format_bundle(mev_bundle: &Vec<TradeData>, mev_type: MevType) -> MevBundle {
