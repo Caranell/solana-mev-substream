@@ -1,27 +1,63 @@
+// datasource and generator should be at the top of your schema.prisma file
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Make sure to set this environment variable
+  // url      = "file:./dev.db"
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+enum MevType {
+  ARBITRAGE
+  SANDWICH
+  // Add other MEV types as needed
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+model MevBundle {
+  bundleId   String    @id @map("bundle_id") // Unique identifier for the bundle
+  blockDate  String    @map("block_date")
+  blockTime  BigInt    @map("block_time")
+  blockSlot  BigInt    @map("block_slot")
+  signer     String    // Signer of the bundle
+  trader     String    // Trader associated with the bundle
+  mevType    MevType   @map("mev_type") // Type of MEV (e.g., ARBITRAGE, SANDWICH)
+  trades     Trade[]   // Relation to multiple trades
+  @@map("mev_bundles") // Maps this model to the "mev_bundles" table in the database
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  viewCount Int      @default(0)
-  author    User?    @relation(fields: [authorId], references: [id])
-  authorId  Int?
+model Trade {
+  id                        String    @id
+  bundleId                  String    @map("bundle_id")
+  blockDate                 String    @map("block_date")
+  blockTime                 BigInt    @map("block_time")
+  blockSlot                 BigInt    @map("block_slot")
+  txId                      String    @map("tx_id")
+  txIndex                   Int       @map("tx_index")
+  signer                    String
+  poolAddress               String    @map("pool_address")
+  baseMint                  String    @map("base_mint")
+  quoteMint                 String    @map("quote_mint")
+  baseVault                 String    @map("base_vault")
+  quoteVault                String    @map("quote_vault")
+  baseAmount                Float     @map("base_amount")
+  quoteAmount               Float     @map("quote_amount")
+  isInnerInstruction        Boolean   @map("is_inner_instruction")
+  instructionIndex          Int       @map("instruction_index")
+  instructionType           String    @map("instruction_type")
+  innerInstructionIndex     Int       @map("inner_instruction_index") // Assuming 0 if not an inner instruction
+  outerProgram              String    @map("outer_program")
+  innerProgram              String    @map("inner_program") // Could be empty if not an inner instruction
+  txnFeeLamports            BigInt    @map("txn_fee_lamports")
+  signerLamportsChange      BigInt    @map("signer_lamports_change")
+  trader                    String
+  outerExecutingAccounts    String[]  @map("outer_executing_accounts") // Array of TEXT
+  traderLamportsChange      BigInt    @map("trader_lamports_change")
+  traderTokenBalanceChanges Json      @map("trader_token_balance_changes") // JSON string array of trader token balance changes
+
+  // Relation to the MevBundle
+  bundle                    MevBundle @relation(fields: [bundleId], references: [bundleId])
+
+  @@map("trades") // Maps this model to the "trades" table in the database
 }

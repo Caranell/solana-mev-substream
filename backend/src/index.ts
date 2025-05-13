@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import fastify from 'fastify'
+import { ISignupBody, ICreatePostBody, IPostByIdParam, IFeedQueryString } from './types'
 
-const prisma = new PrismaClient()
 const app = fastify({ logger: true })
 
 app.post<{
@@ -156,28 +156,7 @@ app.get<{
 
   return posts
 })
-interface IFeedQueryString {
-  searchString: string | null
-  skip: number | null
-  take: number | null
-  orderBy: Prisma.SortOrder | null
-}
 
-interface IPostByIdParam {
-  id: number
-}
-
-interface ICreatePostBody {
-  title: string
-  content: string | null
-  authorEmail: string
-}
-
-interface ISignupBody {
-  name: string | null
-  email: string
-  posts: Prisma.PostCreateInput[]
-}
 
 app.listen({ port: 3000 }, (err) => {
   if (err) {
