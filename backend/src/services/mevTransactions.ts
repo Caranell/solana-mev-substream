@@ -1,14 +1,13 @@
-import { Trade } from "@prisma/client";
-import { MevBundle } from "@prisma/client";
 import db from "./database";
+import { calculateBundleProfit, getTopArbitragePrograms, getTopArbitrageTokens, getTopBundles, getTopSandwichPools, getTopSearchers } from "./utils";
+import { MevBundleWithProfit } from "../types";
 
-type MevBundleWithTrades = MevBundle & {
-  trades: Trade[];
-};
-
-type MevBundleWithProfit = MevBundle & {
-  profit: number;
-};
+interface GetMEVBundlesParams {
+  period: string;
+  mevType: string;
+  limit: number;
+  offset: number;
+}
 
 const getLatestBundle = async () => {
   const latestBundle = await db.getLatestBundle();
@@ -16,7 +15,7 @@ const getLatestBundle = async () => {
   return latestBundle;
 };
 
-const getMEVBundles = async ({ period, mevType, limit, offset }) => {
+const getMEVBundles = async ({ period, mevType, limit, offset }: GetMEVBundlesParams) => {
   const mevBundles = await db.getMEVBundles({
     period,
     mevType,
@@ -34,121 +33,94 @@ const getMEVBundles = async ({ period, mevType, limit, offset }) => {
   return bundlesWithProfit;
 };
 
-const calculateBundleProfit = (bundle: MevBundleWithTrades) => {
-  if (bundle.mevType === "ARBITRAGE") {
-    return calculateArbitrageProfit(bundle);
-  }
-
-  return calculateSanwichProfit(bundle);
-};
-
-const getTopSearchers = (bundles: MevBundleWithProfit[]) => {
-  const signerProfit = bundles.reduce((acc, bundle) => {
-    acc[bundle.signer] = (acc[bundle.signer] || 0) + bundle.profit;
-    return acc;
-  }, {} as Record<string, number>);
-
-  return signerProfit;
-};
-
-const getTopBundles = (bundles: MevBundleWithProfit[]) => {
-  const sortedBundles = bundles.sort((a, b) => b.profit - a.profit);
-
-  return sortedBundles;
-};
-
-const getTopArbitrageBundles = (bundles: MevBundleWithTrades[]) => {
-  const bundlesWithProfit = bundles.map((bundle) => {
-    return {
-      ...bundle,
-      profit: calculateArbitrageProfit(bundle),
-    };
-  });
-
-  const sortedBundles = bundlesWithProfit.sort((a, b) => b.profit - a.profit);
-
-  return sortedBundles;
-};
-
-const getTopSanwichBundles = (bundles: MevBundleWithTrades[]) => {
-  const bundlesWithProfit = bundles.map((bundle) => {
-    return {
-      ...bundle,
-      profit: calculateSanwichProfit(bundle),
-    };
-  });
-
-  const sortedBundles = bundlesWithProfit.sort((a, b) => b.profit - a.profit);
-
-  return sortedBundles;
-};
-
-const SOL_ADDRESS = "So11111111111111111111111111111111111111112";
-
-const calculateArbitrageProfit = (bundle: MevBundleWithTrades) => {
-  const { trades } = bundle;
-
-  const sortedTrades = trades.toSorted(
-    (a, b) => a.innerInstructionIndex - b.innerInstructionIndex
-  );
-
-  const firstTrade = sortedTrades[0];
-  const lastTrade = sortedTrades[sortedTrades.length - 1];
-
-  let solSpent =
-    firstTrade.baseMint === SOL_ADDRESS
-      ? firstTrade.baseAmount
-      : firstTrade.quoteAmount;
-  let solReceived =
-    lastTrade.baseMint === SOL_ADDRESS
-      ? lastTrade.baseAmount
-      : lastTrade.quoteAmount;
-
-  const profit = Math.abs(solReceived) - Math.abs(solSpent);
-
-  return profit;
-};
-
-const calculateSanwichProfit = (bundle: MevBundleWithTrades) => {
-  const { trades } = bundle;
-
-  const sortedTrades = trades.toSorted((a, b) => a.txIndex - b.txIndex);
-
-  const firstTrade = sortedTrades[0];
-  const lastTrade = sortedTrades[sortedTrades.length - 1];
-
-  const solSpent =
-    firstTrade.baseMint === SOL_ADDRESS
-      ? firstTrade.baseAmount
-      : firstTrade.quoteAmount;
-  const solReceived =
-    lastTrade.baseMint === SOL_ADDRESS
-      ? lastTrade.baseAmount
-      : lastTrade.quoteAmount;
-
-  const profit = Math.abs(solReceived) - Math.abs(solSpent);
-
-  return profit;
-};
-
 const getBundlesStatistics = ({
   bundles,
   mevType,
 }: {
-  bundles: MevBundleWithTrades[];
+  bundles: MevBundleWithProfit[];
   mevType: string;
 }) => {
-  // # of bundles/transactions
-  // cost
-  // revenue
-  // senders
-  // programs
-  // victims?
-  // TOP POOLS
+  const numberOfBundles = bundles.length;
+  const numberOfTransactions = bundles.reduce(
+    (acc, bundle) => acc + bundle.trades.length,
+    0
+  );
+  const totalProfit = bundles.reduce((acc, bundle) => acc + bundle.profit, 0);
+  const uniqueSenders = Array.from(
+    new Set(bundles.map((bundle) => bundle.signer))
+  ).length;
+
+  const topSearchers = getTopSearchers(bundles);
+  const topBundles = getTopBundles(bundles);
+
+  let rest = {};
+  if (mevType === "ARBITRAGE") {
+    rest = getArbitrageBundlesStatistics(bundles);
+  } else {
+    rest = getSanwichBundlesStatistics(bundles);
+  }
+
+  return {
+    numberOfBundles,
+    numberOfTransactions,
+    totalProfit,
+    uniqueSenders,
+    topSearchers,
+    topBundles,
+    ...rest,
+  };
 };
 
-const getArbitrageBundlesStatistics = (bundles: MevBundleWithTrades[]) => {
-  // average transactions per bundle
+const getArbitrageBundlesStatistics = (bundles: MevBundleWithProfit[]) => {
+  const averageNumberOfTransactions =
+    bundles.reduce((acc, bundle) => acc + bundle.trades.length, 0) /
+    bundles.length;
+
+  const topArbitrageTokens = getTopArbitrageTokens(bundles);
+  const topArbitragePrograms = getTopArbitragePrograms(bundles);
+
+
+  return {
+    averageNumberOfTransactions,
+    topArbitrageTokens,
+    topArbitragePrograms,
+  };
 };
 
-const getSanwichBundlesStatistics = (bundles: MevBundleWithTrades[]) => {};
+const getSanwichBundlesStatistics = (bundles: MevBundleWithProfit[]) => {
+  const uniqueVictims = Array.from(
+    new Set(
+      bundles.map((bundle) => {
+        const trades = bundle.trades.toSorted((a, b) => a.txIndex - b.txIndex);
+        const victim = trades[1].signer;
+
+        return victim;
+      })
+    )
+  ).length;
+
+  const uniqueAttackers = Array.from(
+    new Set(
+      bundles.map((bundle) => {
+        const trades = bundle.trades.toSorted((a, b) => a.txIndex - b.txIndex);
+        const attacker = trades[0].signer;
+
+        return attacker;
+      })
+    )
+  ).length;
+
+  const topSandwichPools = getTopSandwichPools(bundles);
+
+  return {
+    victims: uniqueVictims,
+    attackers: uniqueAttackers,
+    topSandwichPools,
+  };
+};
+
+export default {
+  getLatestBundle,
+  getMEVBundles,
+  getBundlesStatistics,
+};
