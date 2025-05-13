@@ -5,7 +5,7 @@ import {
   USDC_ADDRESS,
 } from "../constants";
 
-export const calculateBundleProfit = (bundle: MevBundleWithTrades) => {
+export const calculateBundleProfit = (bundle: MevBundleWithTrades): number => {
   if (bundle.mevType === "ARBITRAGE") {
     return calculateArbitrageProfit(bundle);
   }
@@ -13,7 +13,7 @@ export const calculateBundleProfit = (bundle: MevBundleWithTrades) => {
   return calculateSanwichProfit(bundle);
 };
 
-const calculateArbitrageProfit = (bundle: MevBundleWithTrades) => {
+const calculateArbitrageProfit = (bundle: MevBundleWithTrades): number => {
   const { trades } = bundle;
 
   const sortedTrades = trades.toSorted(
@@ -37,7 +37,7 @@ const calculateArbitrageProfit = (bundle: MevBundleWithTrades) => {
   return profit;
 };
 
-const calculateSanwichProfit = (bundle: MevBundleWithTrades) => {
+const calculateSanwichProfit = (bundle: MevBundleWithTrades): number => {
   const { trades } = bundle;
 
   const sortedTrades = trades.toSorted((a, b) => a.txIndex - b.txIndex);
@@ -59,22 +59,41 @@ const calculateSanwichProfit = (bundle: MevBundleWithTrades) => {
   return profit;
 };
 
-export const getTopSearchers = (bundles: MevBundleWithProfit[]) => {
+export interface SearcherProfit {
+  searcherAddress: string;
+  profit: number;
+}
+
+export const getTopSearchers = (bundles: MevBundleWithProfit[]): SearcherProfit[] => {
   const signerProfit = bundles.reduce((acc, bundle) => {
     acc[bundle.signer] = (acc[bundle.signer] || 0) + bundle.profit;
     return acc;
   }, {} as Record<string, number>);
 
-  return signerProfit;
+  const searcherProfitArray = Object.entries(signerProfit).map(
+    ([searcherAddress, profit]) => ({
+      searcherAddress,
+      profit,
+    })
+  );
+
+  searcherProfitArray.sort((a, b) => b.profit - a.profit);
+
+  return searcherProfitArray;
 };
 
-export const getTopBundles = (bundles: MevBundleWithProfit[]) => {
+export const getTopBundles = (bundles: MevBundleWithProfit[]): MevBundleWithProfit[] => {
   const sortedBundles = bundles.sort((a, b) => b.profit - a.profit);
 
   return sortedBundles;
 };
 
-export const getTopSandwichPools = (bundles: MevBundleWithProfit[]) => {
+export interface PoolProfit {
+  pool: string;
+  profit: number;
+}
+
+export const getTopSandwichPools = (bundles: MevBundleWithProfit[]): PoolProfit[] => {
   const pools = bundles.map((bundle) => bundle.trades[0].poolAddress);
   const uniquePools = Array.from(new Set(pools));
 
@@ -98,7 +117,12 @@ export const getTopSandwichPools = (bundles: MevBundleWithProfit[]) => {
   return poolsSortedByProfit;
 };
 
-export const getTopArbitrageTokens = (bundles: MevBundleWithProfit[]) => {
+export interface TokenPopularity {
+  token: string;
+  profit: number;  // This is actually popularity count, not profit
+}
+
+export const getTopArbitrageTokens = (bundles: MevBundleWithProfit[]): TokenPopularity[] => {
   const allTokensArr = [];
 
   for (const bundle of bundles) {
@@ -120,10 +144,24 @@ export const getTopArbitrageTokens = (bundles: MevBundleWithProfit[]) => {
     return acc;
   }, {} as Record<string, number>);
 
-  return tokenPopularity;
+  const tokenPopularityArray = Object.entries(tokenPopularity).map(
+    ([token, profit]) => ({
+      token,
+      profit,
+    })
+  );
+
+  tokenPopularityArray.sort((a, b) => b.profit - a.profit);
+
+  return tokenPopularityArray;
 };
 
-export const getTopArbitragePrograms = (bundles: MevBundleWithProfit[]) => {
+export interface ProgramPopularity {
+  program: string;
+  profit: number;  // This is actually popularity count, not profit
+}
+
+export const getTopArbitragePrograms = (bundles: MevBundleWithProfit[]): ProgramPopularity[] => {
   const programs = bundles
     .map((bundle) => bundle.trades[0].outerProgram)
     .filter(
@@ -136,5 +174,14 @@ export const getTopArbitragePrograms = (bundles: MevBundleWithProfit[]) => {
     return acc;
   }, {} as Record<string, number>);
 
-  return programPopularity;
+  const programPopularityArray = Object.entries(programPopularity).map(
+    ([program, profit]) => ({
+      program,
+      profit,
+    })
+  );
+
+  programPopularityArray.sort((a, b) => b.profit - a.profit);
+
+  return programPopularityArray;
 };
