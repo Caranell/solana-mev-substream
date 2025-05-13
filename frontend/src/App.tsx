@@ -1,35 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
+import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
+import { Sidebar } from '@/components/layout/sidebar';
+import { Dashboard } from '@/pages/dashboard';
+import { SocketProvider } from '@/context/socket-context';
+import { MOCK_TRANSACTIONS } from '@/lib/constants';
+import { Loader2 } from 'lucide-react';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate data loading
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <ThemeProvider defaultTheme="light" storageKey="mev-dashboard-theme">
+      <SocketProvider initialTransactions={MOCK_TRANSACTIONS}>
+        <div className="flex h-screen overflow-hidden bg-background">
+          <Sidebar className="hidden md:flex w-64 flex-shrink-0" />
+          <main className="flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex h-screen items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <Dashboard />
+            )}
+          </main>
+        </div>
+        <Toaster />
+      </SocketProvider>
+    </ThemeProvider>
+  );
 }
 
-export default App
+export default App;
