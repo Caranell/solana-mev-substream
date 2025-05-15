@@ -22,7 +22,7 @@ fn get_db_changes_from_bundles(
     change_index: &mut u64,
 ) {
     for bundle in bundles {
-                create_db_changes_for_bundle(bundle, database_changes, change_index);
+        create_db_changes_for_bundle(bundle, database_changes, change_index);
     }
 }
 

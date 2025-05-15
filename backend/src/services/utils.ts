@@ -4,13 +4,16 @@ import {
   SOL_ADDRESS,
   USDC_ADDRESS,
 } from "../constants";
+import { Trade } from "@prisma/client";
 
 export const calculateBundleProfit = (bundle: MevBundleWithTrades): number => {
   if (bundle.mevType === "1") {
     return calculateArbitrageProfit(bundle);
+  } else if (bundle.mevType === "2") {
+    return calculateSanwichProfit(bundle);
   }
 
-  return calculateSanwichProfit(bundle);
+  return 0;
 };
 
 const calculateArbitrageProfit = (bundle: MevBundleWithTrades): number => {
@@ -20,22 +23,39 @@ const calculateArbitrageProfit = (bundle: MevBundleWithTrades): number => {
     (a, b) => a.innerInstructionIndex - b.innerInstructionIndex
   );
 
-  const firstTrade = sortedTrades[0];
-  const lastTrade = sortedTrades[sortedTrades.length - 1];
+  let solSpent = 0;
+  let solReceived = 0;
 
-  let solSpent =
-    firstTrade.baseMint === SOL_ADDRESS
-      ? firstTrade.baseAmount
-      : firstTrade.quoteAmount;
+  for (const trade of sortedTrades) {
+    if (trade.baseMint === SOL_ADDRESS || trade.quoteMint === SOL_ADDRESS) {
+      const [solAmount, tokenAmount] = getTokensFromTrade(trade);
 
-  let solReceived =
-    lastTrade.baseMint === SOL_ADDRESS
-      ? lastTrade.baseAmount
-      : lastTrade.quoteAmount;
+      if (solAmount < 0) {
+        solSpent += solAmount;
+      } else {
+        solReceived += solAmount;
+      }
+    }
+  }
 
   const profit = Math.abs(solReceived) - Math.abs(solSpent);
 
   return profit;
+};
+
+const getTokensFromTrade = (trade: Trade): [number, number] => {
+  let solAmount = 0;
+  let tokenAmount = 0;
+
+  if (trade.baseMint === SOL_ADDRESS) {
+    solAmount = trade.baseAmount;
+    tokenAmount = trade.quoteAmount;
+  } else {
+    solAmount = trade.quoteAmount;
+    tokenAmount = trade.baseAmount;
+  }
+
+  return [solAmount, tokenAmount];
 };
 
 const calculateSanwichProfit = (bundle: MevBundleWithTrades): number => {
@@ -50,10 +70,16 @@ const calculateSanwichProfit = (bundle: MevBundleWithTrades): number => {
     firstTrade.baseMint === SOL_ADDRESS
       ? firstTrade.baseAmount
       : firstTrade.quoteAmount;
+
   const solReceived =
     lastTrade.baseMint === SOL_ADDRESS
       ? lastTrade.baseAmount
       : lastTrade.quoteAmount;
+
+  console.log("txId", bundle.trades[0].txId);
+
+  console.log("solSpent", solSpent);
+  console.log("solReceived", solReceived);
 
   const profit = Math.abs(solReceived) - Math.abs(solSpent);
 
@@ -88,7 +114,8 @@ export const getTopSearchers = (
 export const getTopBundles = (
   bundles: MevBundleWithProfit[]
 ): MevBundleWithProfit[] => {
-  const sortedBundles = bundles.sort((a, b) => b.profit - a.profit);
+  const sortedBundles = bundles.toSorted((a, b) => b.profit - a.profit);
+  // const sortedBundles = bundles.toSorted((a, b) => a.profit - b.profit);
 
   return sortedBundles;
 };
