@@ -1,4 +1,4 @@
-import { PrismaClient, MevType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { GetMEVBundlesParams, MevBundleWithTrades } from "../types";
 
 const prisma = new PrismaClient();
@@ -29,6 +29,7 @@ const getMEVBundles = async ({
     orderBy: {
       [orderBy]: orderDirection,
     },
+    where: {},
   };
 
   if (noLimit === false && limit) {
@@ -40,7 +41,7 @@ const getMEVBundles = async ({
   }
 
   if (mevType) {
-    queryOptions.where.mevType = mevType as MevType;
+    queryOptions.where.mevType = mevType;
   }
 
   if (period) {

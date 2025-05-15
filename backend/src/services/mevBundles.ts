@@ -32,6 +32,7 @@ const getMEVBundles = async ({
   offset,
   orderBy,
   orderDirection,
+  noLimit,
 }: GetMEVBundlesParams): Promise<MevBundleWithProfit[]> => {
   const mevBundles = await db.getMEVBundles({
     period,
@@ -40,6 +41,7 @@ const getMEVBundles = async ({
     offset,
     orderBy,
     orderDirection,
+    noLimit,
   });
 
   const bundlesWithProfit = mevBundles.map((bundle) => {

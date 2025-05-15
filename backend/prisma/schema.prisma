@@ -7,11 +7,6 @@ generator client {
   provider = "prisma-client-js"
 }
 
-enum MevType {
-  ARBITRAGE
-  SANDWICH
-}
-
 model MevBundle {
   bundleId   String    @id @map("bundle_id") // Unique identifier for the bundle
   blockDate  String    @map("block_date")
@@ -19,7 +14,7 @@ model MevBundle {
   blockSlot  BigInt    @map("block_slot")
   signer     String    // Signer of the bundle
   trader     String    // Trader associated with the bundle
-  mevType    MevType   @map("mev_type") // Type of MEV (e.g., ARBITRAGE, SANDWICH)
+  mevType    String    @map("mev_type") // 0 - arb, 1 - sandwich
   trades     Trade[]   // Relation to multiple trades
   @@map("mev_bundles") // Maps this model to the "mev_bundles" table in the database
 }
@@ -49,9 +44,9 @@ model Trade {
   txnFeeLamports            BigInt    @map("txn_fee_lamports")
   signerLamportsChange      BigInt    @map("signer_lamports_change")
   trader                    String
-  outerExecutingAccounts    String[]  @map("outer_executing_accounts") // Array of TEXT
+  // outerExecutingAccounts    String[]?  @map("outer_executing_accounts") // Array of TEXT
   traderLamportsChange      BigInt    @map("trader_lamports_change")
-  traderTokenBalanceChanges Json      @map("trader_token_balance_changes") // JSON string array of trader token balance changes
+  // traderTokenBalanceChanges Json?      @map("trader_token_balance_changes") // JSON string array of trader token balance changes
 
   // Relation to the MevBundle
   bundle                    MevBundle @relation(fields: [bundleId], references: [bundleId])

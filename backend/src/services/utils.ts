@@ -6,7 +6,7 @@ import {
 } from "../constants";
 
 export const calculateBundleProfit = (bundle: MevBundleWithTrades): number => {
-  if (bundle.mevType === "ARBITRAGE") {
+  if (bundle.mevType === "1") {
     return calculateArbitrageProfit(bundle);
   }
 
@@ -27,6 +27,7 @@ const calculateArbitrageProfit = (bundle: MevBundleWithTrades): number => {
     firstTrade.baseMint === SOL_ADDRESS
       ? firstTrade.baseAmount
       : firstTrade.quoteAmount;
+
   let solReceived =
     lastTrade.baseMint === SOL_ADDRESS
       ? lastTrade.baseAmount
@@ -64,7 +65,9 @@ export interface SearcherProfit {
   profit: number;
 }
 
-export const getTopSearchers = (bundles: MevBundleWithProfit[]): SearcherProfit[] => {
+export const getTopSearchers = (
+  bundles: MevBundleWithProfit[]
+): SearcherProfit[] => {
   const signerProfit = bundles.reduce((acc, bundle) => {
     acc[bundle.signer] = (acc[bundle.signer] || 0) + bundle.profit;
     return acc;
@@ -82,7 +85,9 @@ export const getTopSearchers = (bundles: MevBundleWithProfit[]): SearcherProfit[
   return searcherProfitArray;
 };
 
-export const getTopBundles = (bundles: MevBundleWithProfit[]): MevBundleWithProfit[] => {
+export const getTopBundles = (
+  bundles: MevBundleWithProfit[]
+): MevBundleWithProfit[] => {
   const sortedBundles = bundles.sort((a, b) => b.profit - a.profit);
 
   return sortedBundles;
@@ -93,7 +98,9 @@ export interface PoolProfit {
   profit: number;
 }
 
-export const getTopSandwichPools = (bundles: MevBundleWithProfit[]): PoolProfit[] => {
+export const getTopSandwichPools = (
+  bundles: MevBundleWithProfit[]
+): PoolProfit[] => {
   const pools = bundles.map((bundle) => bundle.trades[0].poolAddress);
   const uniquePools = Array.from(new Set(pools));
 
@@ -119,10 +126,12 @@ export const getTopSandwichPools = (bundles: MevBundleWithProfit[]): PoolProfit[
 
 export interface TokenPopularity {
   token: string;
-  profit: number;  // This is actually popularity count, not profit
+  profit: number; // This is actually popularity count, not profit
 }
 
-export const getTopArbitrageTokens = (bundles: MevBundleWithProfit[]): TokenPopularity[] => {
+export const getTopArbitrageTokens = (
+  bundles: MevBundleWithProfit[]
+): TokenPopularity[] => {
   const allTokensArr = [];
 
   for (const bundle of bundles) {
@@ -158,10 +167,12 @@ export const getTopArbitrageTokens = (bundles: MevBundleWithProfit[]): TokenPopu
 
 export interface ProgramPopularity {
   program: string;
-  profit: number;  // This is actually popularity count, not profit
+  profit: number; // This is actually popularity count, not profit
 }
 
-export const getTopArbitragePrograms = (bundles: MevBundleWithProfit[]): ProgramPopularity[] => {
+export const getTopArbitragePrograms = (
+  bundles: MevBundleWithProfit[]
+): ProgramPopularity[] => {
   const programs = bundles
     .map((bundle) => bundle.trades[0].outerProgram)
     .filter(
