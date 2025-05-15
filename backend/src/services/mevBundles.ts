@@ -15,15 +15,9 @@ import {
   SandwichBundlesStatistics,
   ArbitrageBundlesStatistics,
   SandwichStatistics,
+  GetMEVBundlesParams,
 } from "../types";
 import { MevBundle } from "@prisma/client";
-
-interface GetMEVBundlesParams {
-  period: string;
-  mevType: string;
-  limit: number;
-  offset: number;
-}
 
 const getLatestBundle = async (): Promise<MevBundle | null> => {
   const latestBundle = await db.getLatestBundle();
@@ -36,12 +30,16 @@ const getMEVBundles = async ({
   mevType,
   limit,
   offset,
+  orderBy,
+  orderDirection,
 }: GetMEVBundlesParams): Promise<MevBundleWithProfit[]> => {
   const mevBundles = await db.getMEVBundles({
     period,
     mevType,
     limit,
     offset,
+    orderBy,
+    orderDirection,
   });
 
   const bundlesWithProfit = mevBundles.map((bundle) => {
@@ -54,13 +52,9 @@ const getMEVBundles = async ({
   return bundlesWithProfit;
 };
 
-const getBundlesStatistics = ({
-  bundles,
-  mevType,
-}: {
-  bundles: MevBundleWithProfit[];
-  mevType: string;
-}): BundlesStatistics => {
+const getBundlesStatistics = (bundles: MevBundleWithProfit[]): BundlesStatistics => {
+  const mevType = bundles[0].mevType;
+
   const baseStats: BaseBundlesStatistics = {
     numberOfBundles: bundles.length,
     numberOfTransactions: bundles.reduce(

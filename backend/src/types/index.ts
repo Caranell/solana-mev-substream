@@ -35,3 +35,13 @@ export interface SandwichStatistics {
 export type ArbitrageBundlesStatistics = BaseBundlesStatistics & ArbitrageStatistics;
 export type SandwichBundlesStatistics = BaseBundlesStatistics & SandwichStatistics;
 export type BundlesStatistics = ArbitrageBundlesStatistics | SandwichBundlesStatistics;
+
+export interface GetMEVBundlesParams {
+  period?: string;
+  mevType?: string;
+  limit?: number;
+  offset?: number;
+  orderBy?: string;
+  orderDirection?: string;
+  noLimit?: boolean;
+}

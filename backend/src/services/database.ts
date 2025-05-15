@@ -1,60 +1,71 @@
-import { PrismaClient, MevBundle, Trade } from '@prisma/client'
-import { MevBundleWithTrades } from '../types'
+import { PrismaClient, MevType } from "@prisma/client";
+import { GetMEVBundlesParams, MevBundleWithTrades } from "../types";
 
-type MEVBundlesFilter = {
-  period?: string
-  mev_type?: string
-  limit?: number
-  offset?: number
-}
+const prisma = new PrismaClient();
 
-const prisma = new PrismaClient()
+const ONE_DAY = 24 * 60 * 60;
+const ONE_DAY_MS = ONE_DAY * 1000;
 
- const getLatestBundle = async () => {
+const getLatestBundle = async () => {
   const latestBundle = await prisma.mevBundle.findFirst({
     orderBy: {
-      blockTime: 'desc',
+      blockTime: "desc",
     },
-  })
+  });
 
-  return latestBundle
-}
+  return latestBundle;
+};
 
- const getMEVBundles = async ({
+const getMEVBundles = async ({
   period,
   mevType,
+  orderBy = "blockTime",
+  orderDirection = "desc",
   limit = 10,
   offset = 0,
-}: MEVBundlesFilter): Promise<MevBundleWithTrades[]> => {
-  const filters: MEVBundlesFilter = {}
+  noLimit = false,
+}: GetMEVBundlesParams): Promise<MevBundleWithTrades[]> => {
+  const queryOptions: any = {
+    orderBy: {
+      [orderBy]: orderDirection,
+    },
+  };
 
-  if (period) {
-  }
-
-  if (mevType) {
-    filters.mev_type = mevType
-  }
-
-  if (limit) {
-    filters.limit = limit
+  if (noLimit === false && limit) {
+    queryOptions.take = limit;
   }
 
   if (offset) {
-    filters.offset = offset
+    queryOptions.skip = offset;
   }
 
-  // join mevBundles with trades on bundleId
+  if (mevType) {
+    queryOptions.where.mevType = mevType as MevType;
+  }
+
+  if (period) {
+    const daysAgo = parseInt(period);
+    const nowMs = Date.now();
+    const timestampNDaysAgo = BigInt(
+      Math.floor((nowMs - daysAgo * ONE_DAY_MS) / 1000)
+    );
+
+    queryOptions.where.blockTime = {
+      gte: timestampNDaysAgo,
+    };
+  }
+
   const mevBundles = await prisma.mevBundle.findMany({
-    // where: filters,
+    ...queryOptions,
     include: {
       trades: true,
     },
-  })
+  });
 
-  return mevBundles
-}
+  return mevBundles as MevBundleWithTrades[];
+};
 
 export default {
   getLatestBundle,
   getMEVBundles,
-}
+};
