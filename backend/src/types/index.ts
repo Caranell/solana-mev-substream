@@ -31,3 +31,7 @@ export interface SandwichStatistics {
   attackers: number;
   topSandwichPools: PoolProfit[];
 }
+
+export type ArbitrageBundlesStatistics = BaseBundlesStatistics & ArbitrageStatistics;
+export type SandwichBundlesStatistics = BaseBundlesStatistics & SandwichStatistics;
+export type BundlesStatistics = ArbitrageBundlesStatistics | SandwichBundlesStatistics;

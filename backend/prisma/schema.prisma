@@ -1,8 +1,6 @@
-// datasource and generator should be at the top of your schema.prisma file
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") // Make sure to set this environment variable
-  // url      = "file:./dev.db"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
@@ -12,7 +10,6 @@ generator client {
 enum MevType {
   ARBITRAGE
   SANDWICH
-  // Add other MEV types as needed
 }
 
 model MevBundle {

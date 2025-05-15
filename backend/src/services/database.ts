@@ -1,11 +1,9 @@
 import { PrismaClient, MevBundle, Trade } from '@prisma/client'
+import { MevBundleWithTrades } from '../types'
 
-type TopSearchersFilter = {
+type MEVBundlesFilter = {
   period?: string
-  mevType?: string
-}
-
-type MEVBundlesFilter = TopSearchersFilter & {
+  mev_type?: string
   limit?: number
   offset?: number
 }
@@ -30,13 +28,12 @@ const prisma = new PrismaClient()
 }: MEVBundlesFilter): Promise<MevBundleWithTrades[]> => {
   const filters: MEVBundlesFilter = {}
 
-  // if (period) {
-  //   filters.period = period
-  // }
+  if (period) {
+  }
 
-  // if (mevType) {
-  //   filters.mevType = mevType
-  // }
+  if (mevType) {
+    filters.mev_type = mevType
+  }
 
   if (limit) {
     filters.limit = limit

@@ -10,7 +10,10 @@ import {
 import {
   ArbitrageStatistics,
   BaseBundlesStatistics,
+  BundlesStatistics,
   MevBundleWithProfit,
+  SandwichBundlesStatistics,
+  ArbitrageBundlesStatistics,
   SandwichStatistics,
 } from "../types";
 import { MevBundle } from "@prisma/client";
@@ -21,11 +24,6 @@ interface GetMEVBundlesParams {
   limit: number;
   offset: number;
 }
-
-// Combined types for the complete return type
-type ArbitrageBundlesStatistics = BaseBundlesStatistics & ArbitrageStatistics;
-type SandwichBundlesStatistics = BaseBundlesStatistics & SandwichStatistics;
-type BundlesStatistics = ArbitrageBundlesStatistics | SandwichBundlesStatistics;
 
 const getLatestBundle = async (): Promise<MevBundle | null> => {
   const latestBundle = await db.getLatestBundle();
@@ -72,8 +70,8 @@ const getBundlesStatistics = ({
     totalProfit: bundles.reduce((acc, bundle) => acc + bundle.profit, 0),
     uniqueSenders: Array.from(new Set(bundles.map((bundle) => bundle.signer)))
       .length,
-    topSearchers: getTopSearchers(bundles),
-    topBundles: getTopBundles(bundles),
+    topSearchers: getTopSearchers(bundles).slice(0, 10),
+    topBundles: getTopBundles(bundles).slice(0, 10),
   };
 
   if (mevType === "ARBITRAGE") {
@@ -98,8 +96,8 @@ const getArbitrageBundlesStatistics = (
     bundles.reduce((acc, bundle) => acc + bundle.trades.length, 0) /
     bundles.length;
 
-  const topArbitrageTokens = getTopArbitrageTokens(bundles);
-  const topArbitragePrograms = getTopArbitragePrograms(bundles);
+  const topArbitrageTokens = getTopArbitrageTokens(bundles).slice(0, 10);
+  const topArbitragePrograms = getTopArbitragePrograms(bundles).slice(0, 10);
 
   return {
     averageNumberOfTransactions,
@@ -133,7 +131,7 @@ const getSanwichBundlesStatistics = (
     )
   ).length;
 
-  const topSandwichPools = getTopSandwichPools(bundles);
+  const topSandwichPools = getTopSandwichPools(bundles).slice(0, 10);
 
   return {
     victims: uniqueVictims,
