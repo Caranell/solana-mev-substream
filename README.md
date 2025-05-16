@@ -13,6 +13,12 @@ It uses substreams engine to get the necessary data from the chain, and then use
 ## Demo video
 https://www.youtube.com/watch?v=yQPqdxRdPxw
 
+## What's inside?
+
+- Backend: Typescript, Node.js, Fastify, Prisma, PostgreSQL, 
+- Frontend: Typescript, React, Shadcn UI
+- Substreams: Rust, Substreams Engine ([mev-bundles package](https://substreams.dev/packages/solana-mev-bundles-1-0-0/v1.0.0))
+
 ## How to run it?
 
 ### Webpage
