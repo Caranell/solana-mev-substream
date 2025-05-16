@@ -10,7 +10,16 @@ With the rise of solana activity, the amount of MEV on chain has significantly i
 
 It uses substreams engine to get the necessary data from the chain, and then uses a custom algorithm to decode DEX trades, identify sandwich attacks or arbitrage bundles, and visualize them in a user-friendly way.
 
+## Demo video
+https://www.youtube.com/watch?v=yQPqdxRdPxw
+
 ## How to run it?
+
+### Webpage
+
+https://solana-mev-substream.vercel.app
+
+### Local development
 
 1. Clone the repository
 2. To setup backend
