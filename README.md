@@ -17,7 +17,7 @@ https://www.youtube.com/watch?v=yQPqdxRdPxw
 
 - Backend: Typescript, Node.js, Fastify, Prisma, PostgreSQL, 
 - Frontend: Typescript, React, Shadcn UI
-- Substreams: Rust, Substreams Engine ([mev-bundles package](https://substreams.dev/packages/solana-mev-bundles-1-0-0/v1.0.0))
+- Substreams: Rust, Substreams Engine ([mev-bundles substream package](https://substreams.dev/packages/solana-mev-bundles-1-0-0/v1.0.0))
 
 <img width="1326" alt="Screenshot 2025-05-17 at 02 24 59" src="https://github.com/user-attachments/assets/0dc07c63-7a59-4321-bb21-65157999f52a" />
 
