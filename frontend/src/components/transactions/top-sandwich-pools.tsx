@@ -10,23 +10,26 @@ import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { TIME_MAPPING_LABELS } from "@/lib/constants";
 
-interface ArbitrageProgram {
-  program: string;
+interface SandwichPool {
+  firstToken: string;
+  secondToken: string;
+  firstTokenSymbol: string;
+  secondTokenSymbol: string;
   numberOfTrades: number;
   profit: number;
 }
 
-interface TopArbProgramsTableProps {
-  programs: ArbitrageProgram[];
+interface TopSandwichPoolsTableProps {
+  pools: SandwichPool[];
   title: string;
   timeFilter: string;
 }
 
-export function TopArbProgramsTable({
-  programs,
+export function TopSandwichPoolsTable({
+  pools,
   title,
   timeFilter,
-}: TopArbProgramsTableProps) {
+}: TopSandwichPoolsTableProps) {
   return (
     <div className="rounded-lg border bg-card">
       <div className="flex items-center justify-between p-4">
@@ -37,39 +40,47 @@ export function TopArbProgramsTable({
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">#</TableHead>
-            <TableHead>Program</TableHead>
+            <TableHead>Pool</TableHead>
             <TableHead>Trades</TableHead>
             <TableHead>Profit</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {programs.map((program, index) => {
+          {pools.map((pool, index) => {
             const overallIndex = index + 1;
             return (
-              <TableRow key={program.program} className="hover:bg-muted/50">
+              <TableRow key={`${pool.firstToken}-${pool.secondToken}-${index}`} className="hover:bg-muted/50">
                 <TableCell className="font-medium text-orange-500">
                   #{overallIndex}
                 </TableCell>
                 <TableCell>
-                  <a
-                    href={`https://solscan.io/account/${program.program}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 underline"
-                  >
-                    {program.program.slice(0, 6)}...
-                    {program.program.slice(-6)}
-                  </a>
+                    <a
+                      href={`https://solscan.io/account/${pool.firstToken}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 underline"
+                    >
+                      {pool.firstTokenSymbol || "UNKNOWN"}
+                    </a>
+                    {" / "}
+                    <a
+                      href={`https://solscan.io/account/${pool.secondToken}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 underline"
+                    >
+                      {pool.secondTokenSymbol || "UNKNOWN"}
+                    </a>
                 </TableCell>
-                <TableCell>{program.numberOfTrades}</TableCell>
+                <TableCell>{pool.numberOfTrades}</TableCell>
                 <TableCell className="text-green-500">{`${formatCurrency(
-                  program.profit,
+                  pool.profit,
                   7
                 )} SOL`}</TableCell>
               </TableRow>
             );
           })}
-          {programs.length === 0 && (
+          {pools.length === 0 && (
             <TableRow>
               <TableCell
                 colSpan={4}

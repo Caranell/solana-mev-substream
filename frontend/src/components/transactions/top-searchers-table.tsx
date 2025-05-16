@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { TIME_MAPPING_LABELS } from "@/lib/constants";
+import { MEV_TYPES, TIME_MAPPING_LABELS } from "@/lib/constants";
 
 interface Searcher {
   searcherAddress: string;
@@ -18,7 +18,7 @@ interface Searcher {
 
 interface TopSearchersTableProps {
   searchers: Searcher[];
-  timeFilter: keyof typeof TIME_MAPPING_LABELS;
+  timeFilter: string;
   mevType: string;
 }
 
@@ -30,17 +30,17 @@ export function TopSearchersTable({
   return (
     <div className="rounded-lg border bg-card">
       <div className="flex items-center justify-between p-4">
-        <h3 className="text-lg font-semibold">
-          {mevType === MEV_TYPES.SANDWICH ? "Top Attackers" : "Top Searchers"}
-        </h3>
-        <Badge variant="outline">{TIME_MAPPING_LABELS[timeFilter]}</Badge>
+        <h3 className="text-lg font-semibold">Top Searchers</h3>
+        <Badge variant="outline">{TIME_MAPPING_LABELS[timeFilter as keyof typeof TIME_MAPPING_LABELS]}</Badge>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">#</TableHead>
             <TableHead>Address</TableHead>
-            <TableHead>Trades</TableHead>
+            <TableHead>
+              {mevType === MEV_TYPES.SANDWICH ? "Attacks" : "Trades"}
+            </TableHead>
             <TableHead>Profit</TableHead>
           </TableRow>
         </TableHeader>
@@ -48,13 +48,16 @@ export function TopSearchersTable({
           {searchers.map((searcher, index) => {
             const overallIndex = index + 1;
             return (
-              <TableRow key={searcher.address} className="hover:bg-muted/50">
+              <TableRow
+                key={searcher.searcherAddress}
+                className="hover:bg-muted/50"
+              >
                 <TableCell className="font-medium text-orange-500">
                   #{overallIndex}
                 </TableCell>
                 <TableCell>
                   <a
-                    href={`https://solscan.io/account/${searcher.address}`}
+                    href={`https://solscan.io/account/${searcher.searcherAddress}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-500 underline"

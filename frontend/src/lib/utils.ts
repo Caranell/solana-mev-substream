@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { TimeFilter, Transaction } from '@/types';
+import { Transaction } from '@/types';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -15,6 +15,11 @@ export function formatNumber(num: number | undefined, precision = 2): string {
     return `${(num / 1000).toFixed(precision)}K`;
   }
   return num.toFixed(precision);
+}
+
+export function truncateHash(hash: string, chars = 8) {
+  if (!hash) return "";
+  return `${hash.substring(0, chars)}...`;
 }
 
 export function formatCurrency(num: number, precision = 2): string {
@@ -34,7 +39,7 @@ export function formatDateTime(timestamp: number): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 
-export function filterTransactionsByTimeRange(transactions: Transaction[], timeFilter: TimeFilter): Transaction[] {
+export function filterTransactionsByTimeRange(transactions: Transaction[], timeFilter: string): Transaction[] {
   const now = Date.now();
   let timeRange: number;
   

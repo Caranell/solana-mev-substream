@@ -1,94 +1,103 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-// import { CircleHelp, RefreshCcw } from "lucide-react";
-import { Transaction } from "@/types";
-// import { truncateAddress } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+
 import { useSocket } from "@/context/socket-context";
 import { MEV_TYPES } from "@/lib/constants";
-
+import { formatNumber } from "@/lib/utils";
+// import { ArrowRight } from "lucide-react";
 export function TransactionStream({ mevType }: { mevType: string }) {
   const { recentBundles } = useSocket();
+  const bundles = recentBundles.filter((bundle) => bundle.mevType === mevType);
 
-  console.log('recentBundles', recentBundles)
-  const lastUpdate = recentBundles[0]?.timestamp;
-
-
-  console.log('first', recentBundles[0])
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <div className="flex items-center gap-2">
           <CardTitle className="text-lg">Transaction Stream</CardTitle>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                {/* <CircleHelp className="h-4 w-4 text-muted-foreground" /> */}
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Live transaction stream of MEV activity</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
-        {/* <div className="flex items-center gap-2">
-          {isConnected ? (
-            <Badge
-              variant="outline"
-              className="bg-green-50 text-green-700 border-green-200 gap-1"
-            >
-              <span className="h-2 w-2 rounded-full bg-green-500"></span>{" "}
-              Connected
-            </Badge>
-          ) : (
-            <Badge
-              variant="outline"
-              className="bg-red-50 text-red-700 border-red-200 gap-1"
-            >
-              <span className="h-2 w-2 rounded-full bg-red-500"></span>{" "}
-              Disconnected
-            </Badge>
-          )}
-        </div> */}
       </CardHeader>
       <CardContent className="pb-2">
-        <div className="text-xs text-muted-foreground mb-2">
-          Last update:{" "}
-          {lastUpdate
-            ? new Intl.DateTimeFormat("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              }).format(lastUpdate)
-            : "Never"}
-        </div>
-        <div className="space-y-4">
-          {recentBundles.map((bundle) => (
+        <div className="space-y-4 h-[440px] overflow-y-auto">
+          {bundles.map((bundle) => (
             <div
               key={bundle.bundleId}
               className="flex flex-col gap-1 animate-in slide-in-from-right-5 duration-300"
             >
+              {/* Top section: blockSlot and time */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col">
-                  <div className="text-xs text-muted-foreground">Bot</div>
-                  <div className="font-medium">{bundle.signer}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Block Slot
+                  </div>
+                  <div className="font-medium">{bundle.blockSlot || "N/A"}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(bundle.blockTime).toLocaleTimeString()}
-                  </div>
-                  <div className="font-mono text-xs">
-                    {/* {bundle.bundleId.substring(0, 12)} */}
+                  <div className="text-xs text-muted-foreground">Time</div>
+                  <div className="font-medium">
+                    {new Date(bundle.blockTime * 1000).toLocaleTimeString()}
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 items-center mt-1">
+
+              {/* Middle section: Simplified trades */}
+              <div className="mt-2 bg-muted/30 p-2 rounded-md">
+                {mevType === MEV_TYPES.ARBITRAGE ? (
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Arbitrage Swaps
+                    </div>
+                    {bundle.trades?.map((trade: any, index: number) => (
+                      <Trade key={index} trade={trade} index={index} />
+                    )) || (
+                      <div className="text-sm">No trade data available</div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <div className="text-xs text-muted-foreground">
+                      Sandwich Attack
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center text-sm">
+                        <Badge
+                          variant="outline"
+                          className="bg-red-50 text-red-700 border-red-200"
+                        >
+                          Attacker (Front)
+                        </Badge>
+                        <span className="ml-auto text-xs font-mono">
+                          {bundle.frontTx?.substring(0, 8) || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <Badge
+                          variant="outline"
+                          className="bg-yellow-50 text-yellow-700 border-yellow-200"
+                        >
+                          Victim
+                        </Badge>
+                        <span className="ml-auto text-xs font-mono">
+                          {bundle.victimTx?.substring(0, 8) || "N/A"}
+                        </span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <Badge
+                          variant="outline"
+                          className="bg-red-50 text-red-700 border-red-200"
+                        >
+                          Attacker (Back)
+                        </Badge>
+                        <span className="ml-auto text-xs font-mono">
+                          {bundle.backTx?.substring(0, 8) || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom section: MEV type and profit */}
+              <div className="grid grid-cols-2 items-center mt-2">
                 <div className="flex items-center gap-1">
                   <Badge
                     variant="outline"
@@ -98,11 +107,13 @@ export function TransactionStream({ mevType }: { mevType: string }) {
                         : "bg-blue-50 text-blue-700 border-blue-200"
                     }
                   >
-                    {bundle.mevType === MEV_TYPES.SANDWICH ? "Sandwich" : "Arbitrage"}
+                    {bundle.mevType === MEV_TYPES.SANDWICH
+                      ? "Sandwich"
+                      : "Arbitrage"}
                   </Badge>
                 </div>
                 <div className="text-right font-mono font-medium text-green-600">
-                  +{bundle.profit.toFixed(3)}
+                  +{bundle.profit.toFixed(5)}
                 </div>
               </div>
               <div className="h-px w-full bg-border my-2"></div>
@@ -113,3 +124,26 @@ export function TransactionStream({ mevType }: { mevType: string }) {
     </Card>
   );
 }
+
+// @ts-ignore
+const Trade = ({ trade, index }: { trade: any; index: number }) => {
+  // get first token (negative amount)
+  const firstToken =
+    trade.baseAmount < 0 ? trade.baseTokenSymbol : trade.quoteTokenSymbol;
+  const secondToken =
+    trade.baseAmount < 0 ? trade.quoteTokenSymbol : trade.baseTokenSymbol;
+
+  const firstTokenAmount =
+    trade.baseAmount < 0 ? trade.baseAmount : trade.quoteAmount;
+  const secondTokenAmount =
+    trade.baseAmount < 0 ? trade.quoteAmount : trade.baseAmount;
+
+  return (
+    <div key={index} className="flex items-center gap-1 text-sm">
+      <span className="font-medium">{`${firstToken} → ${secondToken}`}</span>
+      <span className="text-xs text-muted-foreground ml-auto">
+        {formatNumber(firstTokenAmount, 4)} → {formatNumber(secondTokenAmount,4)}
+      </span>
+    </div>
+  );
+};

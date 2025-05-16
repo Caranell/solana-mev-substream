@@ -65,30 +65,63 @@ export const getTopBundles = (
   return sortedBundles;
 };
 
-export const getTopSandwichPools = (
+export const getTopSandwichPools = async (
   bundles: MevBundleWithTrades[]
-): PoolProfit[] => {
-  const pools = bundles.map((bundle) => bundle.trades[0].poolAddress);
-  const uniquePools = Array.from(new Set(pools));
+): Promise<PoolProfit[]> => {
+  const pools = bundles.map((bundle) => ({
+    pool: bundle.trades[0].poolAddress,
+    firstToken: bundle.trades[0].baseMint,
+    secondToken: bundle.trades[0].quoteMint,
+    profit: bundle.profit,
+  }));
 
-  const poolProfit = uniquePools.map((pool) => {
-    const poolBundles = bundles.filter(
-      (bundle) => bundle.trades[0].poolAddress === pool
-    );
-    const poolProfit = poolBundles.reduce(
-      (acc, bundle) => acc + bundle.profit,
-      0
-    );
+  let tokens: any = [];
+  const poolsWithProfit = pools.reduce((acc, pool) => {
+    tokens.push(pool.firstToken);
+    tokens.push(pool.secondToken);
 
-    return {
-      pool,
-      profit: poolProfit,
+    acc[pool.pool] = {
+      ...acc[pool.pool],
+      profit: (acc[pool.pool]?.profit || 0) + pool.profit,
+      numberOfTrades: (acc[pool.pool]?.numberOfTrades || 0) + 1,
+      firstToken: pool.firstToken,
+      secondToken: pool.secondToken,
     };
-  });
+    return acc;
+  }, {} as any);
 
-  const poolsSortedByProfit = poolProfit.sort((a, b) => b.profit - a.profit);
+  const uniqueTokens: string[] = Array.from(new Set(tokens));
 
-  return poolsSortedByProfit;
+  console.log("uniqueTokens", uniqueTokens);
+  const tokensWithSymbol = await database.getTokens(uniqueTokens);
+
+  const tokensWithSymbolArr = tokensWithSymbol.map((token: any) => ({
+    ...token,
+    symbol: `$${token.symbol}`,
+  }));
+
+  const poolsWithProfitAndSymbol = Object.entries(poolsWithProfit).map(
+    ([pool, poolData]: any) => {
+      const firstToken = tokensWithSymbolArr.find(
+        (token: any) => token.address === poolData.firstToken
+      );
+      const secondToken = tokensWithSymbolArr.find(
+        (token: any) => token.address === poolData.secondToken
+      );
+
+      return {
+        ...poolData,
+        firstTokenSymbol: firstToken?.symbol,
+        secondTokenSymbol: secondToken?.symbol,
+      };
+    }
+  );
+
+  const sortedPools = poolsWithProfitAndSymbol.sort(
+    (a, b) => b.profit - a.profit
+  );
+
+  return sortedPools;
 };
 
 export const getTopArbitrageTokens = (
@@ -176,8 +209,16 @@ export const getTopArbitragePrograms = (
       ...programData,
     })
   );
+  
 
-  const sortedPrograms = programsArr.sort((a, b) => b.profit - a.profit);
+  const sortedPrograms = programsArr
+    .filter(
+      (program) =>
+        !KNOWN_AMM_PROGRAMS_TRAITS.some((trait) =>
+          program.program.includes(trait)
+        )
+    )
+    .toSorted((a, b) => b.profit - a.profit);
 
   return sortedPrograms;
 };

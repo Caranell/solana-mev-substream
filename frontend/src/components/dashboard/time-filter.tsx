@@ -1,11 +1,10 @@
 import { Button } from '@/components/ui/button';
-import { TimeFilter } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface TimeFilterProps {
-  filters: { value: TimeFilter; label: string }[];
-  activeFilter: TimeFilter;
-  onChange: (filter: TimeFilter) => void;
+  filters: { value: string; label: string }[];
+  activeFilter: string;
+  onChange: (filter: string) => void;
 }
 
 export function TimeFilterButtons({ filters, activeFilter, onChange }: TimeFilterProps) {

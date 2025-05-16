@@ -7,9 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowDownIcon, ArrowUpIcon } from "@radix-ui/react-icons";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
-import { TransactionType } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { MEV_TYPES, TIME_MAPPING_LABELS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
@@ -26,12 +24,9 @@ interface Bundle {
 interface BundlesTableProps {
   bundles: Bundle[];
   title: string;
-  transactionType: TransactionType;
-  timeFilter: keyof typeof TIME_MAPPING_LABELS;
+  transactionType: string;
+  timeFilter: string;
 }
-
-type SortField = "blockTime" | "profit" | "cost" | "extra";
-type SortDirection = "asc" | "desc";
 
 export function BundlesTable({
   bundles,
@@ -39,65 +34,19 @@ export function BundlesTable({
   transactionType,
   timeFilter,
 }: BundlesTableProps) {
-  const [sortField, setSortField] = useState<SortField>("profit");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   const isSandwich = transactionType === MEV_TYPES.SANDWICH;
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("desc");
-    }
-  };
-
-  const sortedBundles = [...bundles].sort((a, b) => {
-    let aValue: number | undefined;
-    let bValue: number | undefined;
-
-    if (sortField === "blockTime" || sortField === "profit") {
-      aValue = a[sortField];
-      bValue = b[sortField];
-    } else if (sortField === "cost" || sortField === "extra") {
-      aValue =
-        typeof a[sortField] === "number" ? (a[sortField] as number) : undefined;
-      bValue =
-        typeof b[sortField] === "number" ? (b[sortField] as number) : undefined;
-    }
-
-    // Handle undefined values for sorting, treating them as minimal
-    const valA =
-      aValue === undefined
-        ? sortDirection === "asc"
-          ? Infinity
-          : -Infinity
-        : aValue;
-    const valB =
-      bValue === undefined
-        ? sortDirection === "asc"
-          ? Infinity
-          : -Infinity
-        : bValue;
-
-    if (sortDirection === "asc") {
-      return valA > valB ? 1 : -1;
-    } else {
-      return valA < valB ? 1 : -1;
-    }
-  });
-
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const paginatedBundles = sortedBundles.slice(
+  const paginatedBundles = bundles.slice(
     indexOfFirstItem,
     indexOfLastItem
   );
 
-  const totalPages = Math.ceil(sortedBundles.length / itemsPerPage);
+  const totalPages = Math.ceil(bundles.length / itemsPerPage);
 
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -111,25 +60,14 @@ export function BundlesTable({
     <div className="rounded-lg border bg-card">
       <div className="flex items-center justify-between p-4">
         <h3 className="text-lg font-semibold">Top {title}</h3>
-        <Badge variant="outline">{TIME_MAPPING_LABELS[timeFilter]}</Badge>
+        <Badge variant="outline">{TIME_MAPPING_LABELS[timeFilter as keyof typeof TIME_MAPPING_LABELS]}</Badge>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-12">#</TableHead>
             <TableHead>
-              {/* <button
-                className="flex items-center gap-1"
-                onClick={() => handleSort("blockTime")}
-              > */}
               Time
-              {/* {sortField === "blockTime" &&
-                  (sortDirection === "asc" ? (
-                    <ArrowUpIcon className="h-4 w-4" />
-                  ) : (
-                    <ArrowDownIcon className="h-4 w-4" />
-                  ))} */}
-              {/* </button> */}
             </TableHead>
             {isSandwich ? (
               <TableHead>Trades</TableHead>
@@ -137,21 +75,9 @@ export function BundlesTable({
               <TableHead>Transaction</TableHead>
             )}
             <TableHead>
-              {/* <button
-                className="flex items-center gap-1"
-                onClick={() => handleSort("profit")}
-              > */}
               <div className="flex items-center">
                 Profit
-                <ArrowDownIcon className="h-4 w-4" />
               </div>
-              {/* {sortField === "profit" &&
-                  (sortDirection === "asc" ? (
-                    <ArrowUpIcon className="h-4 w-4" />
-                  ) : (
-                    <ArrowDownIcon className="h-4 w-4" />
-                  ))} */}
-              {/* </button> */}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -184,7 +110,7 @@ export function BundlesTable({
                         victim
                       </a>
                       <a
-                        href={`https://solscan.io/tx/${bundle.trades[2].txId}`}
+                        href={`https://solscan.io/tx/${bundle.trades?.[2]?.txId}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 underline"
@@ -216,7 +142,7 @@ export function BundlesTable({
           {paginatedBundles.length === 0 && (
             <TableRow>
               <TableCell
-                colSpan={isSandwich ? 3 : 4}
+                colSpan={4}
                 className="text-center py-4 text-muted-foreground"
               >
                 No transactions found

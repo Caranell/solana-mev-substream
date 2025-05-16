@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 const ONE_DAY = 24 * 60 * 60;
 const ONE_DAY_MS = ONE_DAY * 1000;
 
-const getLatestBundle = async (): Promise<MevBundleWithTrades> => {
+const getLatestBundle = async (): Promise<MevBundleWithTrades | null> => {
   const latestBundle = await prisma.mevBundle.findFirst({
     orderBy: {
       blockTime: "desc",
@@ -17,7 +17,21 @@ const getLatestBundle = async (): Promise<MevBundleWithTrades> => {
     },
   });
 
-  return latestBundle as MevBundleWithTrades;
+  if (latestBundle) {
+
+    const tradedTokens = latestBundle.trades.map((trade) => [trade.baseMint, trade.quoteMint]);
+    const tokenSymbols = await getTokens(tradedTokens.flat());
+    return {
+      ...latestBundle,
+      trades: latestBundle.trades.map((trade) => ({
+        ...trade,
+        baseTokenSymbol: tokenSymbols.find((token) => token.address === trade.baseMint)?.symbol,
+        quoteTokenSymbol: tokenSymbols.find((token) => token.address === trade.quoteMint)?.symbol,
+      })),
+    } as MevBundleWithTrades;
+  }
+
+  return null;
 };
 
 const getTokenSymbol = async (tokenAddress: string) => {
@@ -44,6 +58,7 @@ const getTokenSymbol = async (tokenAddress: string) => {
 };
 
 const getTokens = async (tokens: string[]) => {
+  console.log('tokens', tokens)
   const dbTokens = await prisma.tokens.findMany({
     where: {
       address: { in: tokens },

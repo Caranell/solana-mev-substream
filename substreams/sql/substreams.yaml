@@ -27,7 +27,7 @@ binaries:
 modules:
   - name: db_out
     kind: map
-    initialBlock: 		340458779	
+    initialBlock: 	340482757		
     inputs:
       - map: solana_mev_bundles_1_0_0:map_dex_trades
     output:

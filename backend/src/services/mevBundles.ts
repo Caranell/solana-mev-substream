@@ -20,7 +20,7 @@ import {
 import { MevBundle } from "@prisma/client";
 import { getTokensMetadata } from "./helius";
 
-const getLatestBundle = async (): Promise<MevBundle> => {
+const getLatestBundle = async (): Promise<MevBundleWithTrades | null> => {
   const latestBundle = await db.getLatestBundle();
 
   return latestBundle;
@@ -78,9 +78,9 @@ const fillMissingTokens = async (bundles: MevBundleWithTrades[]) => {
   return tokensMetadata;
 };
 
-const getBundlesStatistics = (
+const getBundlesStatistics = async (
   bundles: MevBundleWithTrades[]
-): BundlesStatistics => {
+): Promise<BundlesStatistics> => {
   console.log("getting stats");
   if (bundles.length === 0) {
     return {} as BundlesStatistics;
@@ -111,7 +111,7 @@ const getBundlesStatistics = (
       ...arbStats,
     } as ArbitrageBundlesStatistics;
   } else {
-    const sandwichStats = getSanwichBundlesStatistics(bundles);
+    const sandwichStats = await getSanwichBundlesStatistics(bundles);
     return {
       ...baseStats,
       ...sandwichStats,
@@ -138,9 +138,9 @@ const getArbitrageBundlesStatistics = (
   };
 };
 
-const getSanwichBundlesStatistics = (
+const getSanwichBundlesStatistics = async (
   bundles: MevBundleWithTrades[]
-): SandwichStatistics => {
+): Promise<SandwichStatistics> => {
   const uniqueVictims = Array.from(
     new Set(
       bundles.map((bundle) => {
@@ -163,12 +163,12 @@ const getSanwichBundlesStatistics = (
     )
   ).length;
 
-  const topSandwichPools = getTopSandwichPools(bundles).slice(0, 10);
+  const topSandwichPools = await getTopSandwichPools(bundles);
 
   return {
     victims: uniqueVictims,
     attackers: uniqueAttackers,
-    topSandwichPools,
+    topSandwichPools: topSandwichPools.slice(0, 10),
   };
 };
 

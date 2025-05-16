@@ -3,18 +3,13 @@ import { StatsSummary } from "@/components/dashboard/stats-summary";
 import { BundlesTable } from "@/components/transactions/bundles-table";
 import { TransactionStream } from "@/components/transactions/transaction-stream";
 import { TimeFilterButtons } from "@/components/dashboard/time-filter";
-import {
-  MEV_TYPES,
-  TIME_FILTERS,
-  TIME_MAPPING,
-  TIME_MAPPING_VALUES,
-} from "@/lib/constants";
-import { TimeFilter } from "@/types";
+import { MEV_TYPES, TIME_FILTERS, TIME_MAPPING } from "@/lib/constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { getBundles, getStatistics } from "@/lib/api";
 import { TopArbProgramsTable } from "@/components/transactions/top-arb-programs";
 import { TopSearchersTable } from "@/components/transactions/top-searchers-table";
+import { TopSandwichPoolsTable } from "@/components/transactions/top-sandwich-pools";
 
 const MEV_TYPES_LABELS = {
   [MEV_TYPES.ARBITRAGE]: "🔄 Arbitrages",
@@ -86,13 +81,21 @@ export function Dashboard() {
               <TransactionStream mevType={MEV_TYPES.SANDWICH} />
             </div>
           </div>
-          <div>
-            <TopSearchersTable
-              searchers={stats?.topSearchers || []}
-              title="Top Searchers"
-              mevType={MEV_TYPES.SANDWICH}
-              timeFilter={timeFilter}
-            />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              <TopSearchersTable
+                searchers={stats?.topSearchers || []}
+                mevType={MEV_TYPES.SANDWICH}
+                timeFilter={timeFilter}
+              />
+            </div>
+            <div>
+              <TopSandwichPoolsTable
+                title="Top Sandwiched Pools"
+                pools={stats?.topSandwichPools || []}
+                timeFilter={timeFilter}
+              />
+            </div>
           </div>
         </TabsContent>
         <TabsContent value={MEV_TYPES.ARBITRAGE} className="space-y-4">
@@ -104,12 +107,13 @@ export function Dashboard() {
                 title="Arbitrages"
                 transactionType={MEV_TYPES.ARBITRAGE}
                 timeFilter={timeFilter}
-                timeFilterLabel={TIME_MAPPING[timeFilter]}
               />
             </div>
             <div>
               <TransactionStream mevType={MEV_TYPES.ARBITRAGE} />
             </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <div>
               <TopArbProgramsTable
                 programs={stats?.topArbitragePrograms || []}
@@ -120,7 +124,6 @@ export function Dashboard() {
             <div>
               <TopSearchersTable
                 searchers={stats?.topSearchers || []}
-                title="Top Searchers"
                 mevType={MEV_TYPES.ARBITRAGE}
                 timeFilter={timeFilter}
               />
