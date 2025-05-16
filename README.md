@@ -8,7 +8,7 @@ With the rise of solana activity, the amount of MEV on chain has significantly i
 
 ## How does it work?
 
-It uses substreams engine to get the necessary data from the chain, and then uses a custom algorithm to decode DEX trades, identify sandwich attacks or arbitrage bundles, and visualize them in a user-friendly way.
+It uses substreams engine to get the necessary data from the chain, and then uses a custom algorithm to decode [DEX trades](https://github.com/Topledger/solana-programs/tree/main/dex-trades-extended) (using dex-trades-substream, built by TopLedger team), identify sandwich attacks or arbitrage bundles (using custom-built substream, code available in /substreams folder), and visualize them in a user-friendly way.
 
 ## Demo video
 https://www.youtube.com/watch?v=yQPqdxRdPxw
