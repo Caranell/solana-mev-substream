@@ -13,6 +13,8 @@ import { TimeFilter } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { getBundles, getStatistics } from "@/lib/api";
+import { TopArbProgramsTable } from "@/components/transactions/top-arb-programs";
+import { TopSearchersTable } from "@/components/transactions/top-searchers-table";
 
 const MEV_TYPES_LABELS = {
   [MEV_TYPES.ARBITRAGE]: "🔄 Arbitrages",
@@ -21,23 +23,23 @@ const MEV_TYPES_LABELS = {
 
 export function Dashboard() {
   const [timeFilter, setTimeFilter] = useState<string>(TIME_MAPPING["7D"]);
-  const [txType, setTxType] = useState(MEV_TYPES.ARBITRAGE);
+  const [mevType, setMevType] = useState(MEV_TYPES.ARBITRAGE);
 
   const { data: transactions } = useQuery({
-    queryKey: ["transactions", timeFilter, txType],
+    queryKey: ["transactions", timeFilter, mevType],
     queryFn: () =>
       getBundles({
         period: timeFilter,
-        mevType: txType,
+        mevType: mevType,
       }),
   });
 
   const { data: stats } = useQuery({
-    queryKey: ["stats", timeFilter, txType],
+    queryKey: ["stats", timeFilter, mevType],
     queryFn: () =>
       getStatistics({
         period: timeFilter,
-        mevType: txType,
+        mevType: mevType,
       }),
   });
 
@@ -46,10 +48,10 @@ export function Dashboard() {
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {MEV_TYPES_LABELS[txType]}
+            {MEV_TYPES_LABELS[mevType]}
           </h1>
           {/* <p className="text-muted-foreground">
-            Monitor {MEV_TYPES_LABELS[txType]} transactions on Solana
+            Monitor {MEV_TYPES_LABELS[mevType]} transactions on Solana
           </p> */}
         </div>
         <TimeFilterButtons
@@ -61,8 +63,8 @@ export function Dashboard() {
 
       <Tabs
         defaultValue={MEV_TYPES.ARBITRAGE}
-        value={txType}
-        onValueChange={(value) => setTxType(value)}
+        value={mevType}
+        onValueChange={(value) => setMevType(value)}
         className="space-y-4"
       >
         <TabsList>
@@ -84,6 +86,14 @@ export function Dashboard() {
               <TransactionStream mevType={MEV_TYPES.SANDWICH} />
             </div>
           </div>
+          <div>
+            <TopSearchersTable
+              searchers={stats?.topSearchers || []}
+              title="Top Searchers"
+              mevType={MEV_TYPES.SANDWICH}
+              timeFilter={timeFilter}
+            />
+          </div>
         </TabsContent>
         <TabsContent value={MEV_TYPES.ARBITRAGE} className="space-y-4">
           <StatsSummary data={stats} transactionType={MEV_TYPES.ARBITRAGE} />
@@ -99,6 +109,21 @@ export function Dashboard() {
             </div>
             <div>
               <TransactionStream mevType={MEV_TYPES.ARBITRAGE} />
+            </div>
+            <div>
+              <TopArbProgramsTable
+                programs={stats?.topArbitragePrograms || []}
+                title="Top Arbitrage Programs"
+                timeFilter={timeFilter}
+              />
+            </div>
+            <div>
+              <TopSearchersTable
+                searchers={stats?.topSearchers || []}
+                title="Top Searchers"
+                mevType={MEV_TYPES.ARBITRAGE}
+                timeFilter={timeFilter}
+              />
             </div>
           </div>
         </TabsContent>

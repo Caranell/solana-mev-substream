@@ -8,10 +8,12 @@ export interface PoolProfit {
 export interface SearcherProfit {
   searcherAddress: string;
   profit: number;
+  numberOfTrades: number;
 }
 export interface ProgramPopularity {
   program: string;
   profit: number;
+  numberOfTrades: number;
 }
 
 export interface TokenPopularity {
@@ -28,10 +30,6 @@ export type MevBundleWithTrades = MevBundle & {
   trades: TradeWithTokens[];
 };
 
-export type MevBundleWithProfit = MevBundleWithTrades & {
-  profit: number;
-};
-
 // Common fields for all bundle statistics
 export interface BaseBundlesStatistics {
   numberOfBundles: number;
@@ -39,7 +37,7 @@ export interface BaseBundlesStatistics {
   totalProfit: number;
   uniqueSenders: number;
   topSearchers: SearcherProfit[];
-  topBundles: MevBundleWithProfit[];
+  topBundles: MevBundleWithTrades[];
 }
 
 export interface ArbitrageStatistics {

@@ -16,7 +16,7 @@ model MevBundle {
   trader     String    // Trader associated with the bundle
   mevType    String    @map("mev_type") // 0 - arb, 1 - sandwich
   trades     Trade[]   // Relation to multiple trades
-  profit     Float?     @map("profit")
+  profit     Float     @map("profit")
   @@map("mev_bundles") // Maps this model to the "mev_bundles" table in the database
 }
 

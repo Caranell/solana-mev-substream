@@ -56,9 +56,9 @@ const getTokens = async (tokens: string[]) => {
 const getMEVBundles = async ({
   period,
   mevType,
-  orderBy = "blockTime",
+  orderBy = "profit",
   orderDirection = "desc",
-  limit = 10,
+  limit = 50,
   offset = 0,
   noLimit = false,
 }: GetMEVBundlesParams): Promise<MevBundleWithTrades[]> => {
@@ -68,6 +68,7 @@ const getMEVBundles = async ({
     },
     where: {},
   };
+  
 
   if (noLimit === false && limit) {
     queryOptions.take = limit;

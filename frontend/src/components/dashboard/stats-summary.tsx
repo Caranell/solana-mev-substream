@@ -81,7 +81,7 @@ export function ArbitrageSummary({ data }: { data: ArbitrageStats }) {
     <>
       <DataCard
         title="Arbitrages"
-        value={formatNumber(data?.numberOfBundles, 0)}
+        value={formatNumber(data?.numberOfBundles, 2)}
       />
       <DataCard
         title="Revenue"

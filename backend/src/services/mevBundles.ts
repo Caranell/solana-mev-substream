@@ -1,6 +1,5 @@
 import db from "./database";
 import {
-  calculateBundleProfit,
   getTopArbitragePrograms,
   getTopArbitrageTokens,
   getTopBundles,
@@ -12,24 +11,19 @@ import {
   ArbitrageStatistics,
   BaseBundlesStatistics,
   BundlesStatistics,
-  MevBundleWithProfit,
   SandwichBundlesStatistics,
   ArbitrageBundlesStatistics,
   SandwichStatistics,
   GetMEVBundlesParams,
+  MevBundleWithTrades,
 } from "../types";
 import { MevBundle } from "@prisma/client";
 import { getTokensMetadata } from "./helius";
 
-const getLatestBundle = async (): Promise<MevBundleWithProfit> => {
+const getLatestBundle = async (): Promise<MevBundle> => {
   const latestBundle = await db.getLatestBundle();
 
-  const bundleWithProfit = {
-    ...latestBundle,
-    profit: calculateBundleProfit(latestBundle),
-  };
-
-  return bundleWithProfit;
+  return latestBundle;
 };
 
 const getMEVBundles = async ({
@@ -40,7 +34,7 @@ const getMEVBundles = async ({
   orderBy,
   orderDirection,
   noLimit,
-}: GetMEVBundlesParams): Promise<MevBundleWithProfit[]> => {
+}: GetMEVBundlesParams): Promise<MevBundleWithTrades[]> => {
   const mevBundles = await db.getMEVBundles({
     period,
     mevType,
@@ -51,18 +45,10 @@ const getMEVBundles = async ({
     noLimit,
   });
 
-  const bundlesWithProfit = mevBundles.map((bundle) => {
-    return {
-      ...bundle,
-      profit: calculateBundleProfit(bundle),
-    };
-  });
-
-
-  return bundlesWithProfit;
+  return mevBundles;
 };
 
-const fillMissingTokens = async (bundles: MevBundleWithProfit[]) => {
+const fillMissingTokens = async (bundles: MevBundleWithTrades[]) => {
   const uniqueTokens = Array.from(
     new Set(
       bundles
@@ -93,7 +79,7 @@ const fillMissingTokens = async (bundles: MevBundleWithProfit[]) => {
 };
 
 const getBundlesStatistics = (
-  bundles: MevBundleWithProfit[]
+  bundles: MevBundleWithTrades[]
 ): BundlesStatistics => {
   console.log("getting stats");
   if (bundles.length === 0) {
@@ -134,7 +120,7 @@ const getBundlesStatistics = (
 };
 
 const getArbitrageBundlesStatistics = (
-  bundles: MevBundleWithProfit[]
+  bundles: MevBundleWithTrades[]
 ): ArbitrageStatistics => {
   const averageNumberOfTransactions =
     bundles.reduce((acc, bundle) => acc + bundle.trades.length, 0) /
@@ -153,7 +139,7 @@ const getArbitrageBundlesStatistics = (
 };
 
 const getSanwichBundlesStatistics = (
-  bundles: MevBundleWithProfit[]
+  bundles: MevBundleWithTrades[]
 ): SandwichStatistics => {
   const uniqueVictims = Array.from(
     new Set(

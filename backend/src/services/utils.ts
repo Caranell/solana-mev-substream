@@ -1,5 +1,4 @@
 import {
-  MevBundleWithProfit,
   MevBundleWithTrades,
   PoolProfit,
   ProgramPopularity,
@@ -12,96 +11,62 @@ import {
   USDC_ADDRESS,
 } from "../constants";
 import { Trade } from "@prisma/client";
-
-export const calculateBundleProfit = (bundle: MevBundleWithTrades): number => {
-  if (bundle.mevType === "1") {
-    return calculateArbitrageProfit(bundle);
-  } else if (bundle.mevType === "2") {
-    return calculateSanwichProfit(bundle);
-  }
-
-  return 0;
-};
-
-const calculateArbitrageProfit = (bundle: MevBundleWithTrades): number => {
-  const { trades } = bundle;
-
-  const sortedTrades = trades.toSorted(
-    (a, b) => a.innerInstructionIndex - b.innerInstructionIndex
-  );
-
-  let solSpent = 0;
-  let solReceived = 0;
-
-  for (const trade of sortedTrades) {
-    if (trade.baseMint === SOL_ADDRESS || trade.quoteMint === SOL_ADDRESS) {
-      const [solAmount, tokenAmount] = getTokensFromTrade(trade);
-
-      if (solAmount < 0) {
-        solSpent += solAmount;
-      } else {
-        solReceived += solAmount;
-      }
-    }
-  }
-
-  const profit = Math.abs(solReceived) - Math.abs(solSpent);
-
-  return profit;
-};
-
-
-const calculateSanwichProfit = (bundle: MevBundleWithTrades): number => {
-  const { trades } = bundle;
-
-  const sortedTrades = trades.toSorted((a, b) => a.txIndex - b.txIndex);
-
-  const firstTrade = sortedTrades[0];
-  const lastTrade = sortedTrades[sortedTrades.length - 1];
-
-  const [solAmountFirstTrade, tokenAmountFirstTrade] = getTokensFromTrade(firstTrade);
-  const [solAmountLastTrade, tokenAmountLastTrade] = getTokensFromTrade(lastTrade);
-
-  if (Math.abs(tokenAmountFirstTrade) !== Math.abs(tokenAmountLastTrade)) {
-    return 0;
-  }
-
-  const profit = Math.abs(solAmountLastTrade) - Math.abs(solAmountFirstTrade);
-
-  return profit;
-};
+import database from "./database";
 
 export const getTopSearchers = (
-  bundles: MevBundleWithProfit[]
+  bundles: MevBundleWithTrades[]
 ): SearcherProfit[] => {
-  const signerProfit = bundles.reduce((acc, bundle) => {
-    acc[bundle.signer] = (acc[bundle.signer] || 0) + bundle.profit;
+  const mevType = bundles[0].mevType;
+
+  let sortedBundles;
+
+  // sort trades inside bundles
+
+  if (mevType === "1") {
+    sortedBundles = bundles.map((bundle) => ({
+      ...bundle,
+      trades: bundle.trades.sort(
+        (a, b) => b.innerInstructionIndex - a.innerInstructionIndex
+      ),
+    }));
+  } else {
+    sortedBundles = bundles.map((bundle) => ({
+      ...bundle,
+      trades: bundle.trades.sort((a, b) => b.txIndex - a.txIndex),
+    }));
+  }
+
+  const searchers = sortedBundles.reduce((acc, bundle) => {
+    acc[bundle.trades[0].signer] = {
+      ...acc[bundle.trades[0].signer],
+      profit: (acc[bundle.trades[0].signer]?.profit || 0) + bundle.profit,
+      numberOfTrades: (acc[bundle.trades[0].signer]?.numberOfTrades || 0) + 1,
+    };
+
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as any);
 
-  const searcherProfitArray = Object.entries(signerProfit).map(
-    ([searcherAddress, profit]) => ({
-      searcherAddress,
-      profit,
-    })
-  );
+  const searchersArr = Object.entries(searchers).map(([address, searcher]) => ({
+    // @ts-ignore
+    ...searcher,
+    searcherAddress: address,
+  }));
 
-  searcherProfitArray.sort((a, b) => b.profit - a.profit);
+  const sortedSearchers = searchersArr.sort((a, b) => b.profit - a.profit);
 
-  return searcherProfitArray;
+  return sortedSearchers;
 };
 
 export const getTopBundles = (
-  bundles: MevBundleWithProfit[]
-): MevBundleWithProfit[] => {
+  bundles: MevBundleWithTrades[]
+): MevBundleWithTrades[] => {
   const sortedBundles = bundles.toSorted((a, b) => b.profit - a.profit);
-  // const sortedBundles = bundles.toSorted((a, b) => a.profit - b.profit);
 
   return sortedBundles;
 };
 
 export const getTopSandwichPools = (
-  bundles: MevBundleWithProfit[]
+  bundles: MevBundleWithTrades[]
 ): PoolProfit[] => {
   const pools = bundles.map((bundle) => bundle.trades[0].poolAddress);
   const uniquePools = Array.from(new Set(pools));
@@ -127,43 +92,57 @@ export const getTopSandwichPools = (
 };
 
 export const getTopArbitrageTokens = (
-  bundles: MevBundleWithProfit[]
+  bundles: MevBundleWithTrades[]
 ): TokenPopularity[] => {
-  const allTokensArr = [];
-
+  const tokens: any = {};
   for (const bundle of bundles) {
     let uniqueBundleTokens = new Set<string>();
     for (const trade of bundle.trades) {
-      uniqueBundleTokens.add(trade.baseMint);
-      uniqueBundleTokens.add(trade.quoteMint);
-    }
+      tokens[trade.baseMint] = {
+        ...tokens[trade.baseMint],
+        profit: (tokens[trade.baseMint]?.profit || 0) + bundle.profit,
+        numberOfTrades: (tokens[trade.baseMint]?.numberOfTrades || 0) + 1,
+      };
 
-    allTokensArr.push(...Array.from(uniqueBundleTokens));
+      tokens[trade.quoteMint] = {
+        ...tokens[trade.quoteMint],
+        profit: (tokens[trade.quoteMint]?.profit || 0) + bundle.profit,
+        numberOfTrades: (tokens[trade.quoteMint]?.numberOfTrades || 0) + 1,
+      };
+    }
   }
 
-  const allTokensFiltered = allTokensArr.filter(
-    (token) => token !== USDC_ADDRESS && token !== SOL_ADDRESS
-  );
+  delete tokens[SOL_ADDRESS];
 
-  const tokenPopularity = allTokensFiltered.reduce((acc, token) => {
-    acc[token] = (acc[token] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const tokensArr = Object.entries(tokens).map(([token, tokenData]) => ({
+    // @ts-ignore
+    ...tokenData,
+    tokenAddress: token,
+  }));
 
-  const tokenPopularityArray = Object.entries(tokenPopularity).map(
-    ([token, profit]) => ({
-      token,
-      profit,
-    })
-  );
+  // const tokensWithSymbol = await database.getTokens(
+  //   tokensArr.map((token) => token.tokenAddress)
+  // );
 
-  tokenPopularityArray.sort((a, b) => b.profit - a.profit);
+  // const tokensWithSymbolArr = tokensArr.map((token) => {
+  //   const tokenWithSymbol = tokensWithSymbol.find(
+  //     (t) => t.address === token.tokenAddress
+  //   );
+  //   return {
+  //     ...token,
+  //     symbol:
+  //       `$${tokenWithSymbol?.symbol}` ||
+  //       `${token.tokenAddress.slice(0, 4)}...${token.tokenAddress.slice(-4)}`,
+  //   };
+  // });
 
-  return tokenPopularityArray;
+  const sortedTokens = tokensArr.toSorted((a, b) => b.profit - a.profit);
+
+  return sortedTokens;
 };
 
 export const getUniqueArbitragePrograms = (
-  bundles: MevBundleWithProfit[]
+  bundles: MevBundleWithTrades[]
 ): number => {
   const programs = bundles
     .map((bundle) => bundle.trades[0].outerProgram)
@@ -178,43 +157,27 @@ export const getUniqueArbitragePrograms = (
 };
 
 export const getTopArbitragePrograms = (
-  bundles: MevBundleWithProfit[]
+  bundles: MevBundleWithTrades[]
 ): ProgramPopularity[] => {
-  const programs = bundles
-    .map((bundle) => bundle.trades[0].outerProgram)
-    .filter(
-      (program) =>
-        !KNOWN_AMM_PROGRAMS_TRAITS.some((trait) => program.includes(trait))
-    );
-
-  const programPopularity = programs.reduce((acc, program) => {
-    acc[program] = (acc[program] || 0) + 1;
+  const programs = bundles.reduce((acc, bundle) => {
+    acc[bundle.trades[0].outerProgram] = {
+      ...acc[bundle.trades[0].outerProgram],
+      profit: (acc[bundle.trades[0].outerProgram]?.profit || 0) + bundle.profit,
+      numberOfTrades:
+        (acc[bundle.trades[0].outerProgram]?.numberOfTrades || 0) + 1,
+    };
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as any);
 
-  const programPopularityArray = Object.entries(programPopularity).map(
-    ([program, profit]) => ({
+  const programsArr = Object.entries(programs).map(
+    ([program, programData]) => ({
       program,
-      profit,
+      // @ts-ignore
+      ...programData,
     })
   );
 
-  programPopularityArray.sort((a, b) => b.profit - a.profit);
+  const sortedPrograms = programsArr.sort((a, b) => b.profit - a.profit);
 
-  return programPopularityArray;
-};
-
-const getTokensFromTrade = (trade: Trade): [number, number] => {
-  let solAmount = 0;
-  let tokenAmount = 0;
-
-  if (trade.baseMint === SOL_ADDRESS) {
-    solAmount = trade.baseAmount;
-    tokenAmount = trade.quoteAmount;
-  } else {
-    solAmount = trade.quoteAmount;
-    tokenAmount = trade.baseAmount;
-  }
-
-  return [solAmount, tokenAmount];
+  return sortedPrograms;
 };
