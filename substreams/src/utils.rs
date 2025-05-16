@@ -78,6 +78,14 @@ pub fn is_sandwich_sequence(trade_a: &TradeData, trade_b: &TradeData, trade_c: &
         return false;
     }
 
+    if !is_same_token_amount_traded(&trade_a, &trade_c) {
+        return false;
+    }
+
+    if !is_sol_amount_correct(&trade_a, &trade_c) {
+        return false;
+    }
+
     let mut unique_traded_tokens: HashSet<String> = HashSet::new();
     unique_traded_tokens.insert(trade_a.base_mint.clone());
     unique_traded_tokens.insert(trade_a.quote_mint.clone());
@@ -92,6 +100,38 @@ pub fn is_sandwich_sequence(trade_a: &TradeData, trade_b: &TradeData, trade_c: &
     }
 
     return true;
+}
+
+fn is_same_token_amount_traded(trade_a: &TradeData, trade_c: &TradeData) -> bool {
+    let token_amount_first_trade = if trade_a.base_mint == WSOL_ADDRESS {
+        trade_a.quote_amount
+    } else {
+        trade_a.base_amount
+    };
+
+    let token_amount_last_trade = if trade_c.base_mint == WSOL_ADDRESS {
+        trade_c.quote_amount
+    } else {
+        trade_c.base_amount
+    };
+
+    return token_amount_first_trade.abs() == token_amount_last_trade.abs();
+}
+
+fn is_sol_amount_correct(trade_a: &TradeData, trade_c: &TradeData) -> bool {
+    let sol_amount_first_trade = if trade_a.base_mint == WSOL_ADDRESS {
+        trade_a.base_amount
+    } else {
+        trade_a.quote_amount
+    };
+
+    let sol_amount_last_trade = if trade_c.base_mint == WSOL_ADDRESS {
+        trade_c.base_amount
+    } else {
+        trade_c.quote_amount
+    };
+
+    return sol_amount_first_trade < 0.0 && sol_amount_last_trade > 0.0;
 }
 
 pub fn format_bundle(mev_bundle: &Vec<TradeData>, mev_type: MevType) -> MevBundle {
