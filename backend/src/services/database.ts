@@ -1,19 +1,45 @@
 import { PrismaClient } from "@prisma/client";
 import { GetMEVBundlesParams, MevBundleWithTrades } from "../types";
+import { getTokenName } from "./helius";
 
 const prisma = new PrismaClient();
 
 const ONE_DAY = 24 * 60 * 60;
 const ONE_DAY_MS = ONE_DAY * 1000;
 
-const getLatestBundle = async () => {
+const getLatestBundle = async (): Promise<MevBundleWithTrades> => {
   const latestBundle = await prisma.mevBundle.findFirst({
     orderBy: {
       blockTime: "desc",
     },
+    include: {
+      trades: true,
+    },
   });
 
-  return latestBundle;
+  return latestBundle as MevBundleWithTrades;
+};
+
+const getTokenSymbol = async (tokenAddress: string) => {
+  const token = await prisma.tokens.findFirst({
+    where: {
+      address: tokenAddress,
+    },
+  });
+
+  if (token) {
+    return token.symbol;
+  }
+
+  const symbol = await getTokenName(tokenAddress);
+  await prisma.tokens.create({
+    data: {
+      address: tokenAddress,
+      symbol,
+    },
+  });
+
+  return symbol;
 };
 
 const getMEVBundles = async ({
@@ -69,4 +95,5 @@ const getMEVBundles = async ({
 export default {
   getLatestBundle,
   getMEVBundles,
+  getTokenSymbol,
 };

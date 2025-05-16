@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 interface SocketContextType {
   isConnected: boolean;
   // lastMessage: Transaction | null;
-  // recentTransactions: Transaction[];
+  recentBundles: any[];
   connect: () => void;
   disconnect: () => void;
 }
@@ -23,70 +23,45 @@ interface SocketProviderProps {
   children: React.ReactNode;
 }
 
-// const SOCKET_URL = process.env.VITE_BACKEND_SOCKET_URL;
+const SOCKET_URL = import.meta.env.VITE_WS_URL;
 
-export const SocketProvider = ({
-  children,
-}: SocketProviderProps) => {
+export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(false);
-  // const [lastMessage, setLastMessage] = useState<Transaction | null>(null);
-  // const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  // @ts-ignore
+  const [recentBundles, setRecentBundles] = useState<any[]>([]);
 
   const connect = () => {
-    console.log(`Connecting to WebSocket at ${'SOCKET_URL'}`);
-    // In a real application, create an actual WebSocket connection
-    // const socket = new WebSocket(url);
+    console.log("socket url", SOCKET_URL);
+    const socket = new WebSocket(SOCKET_URL);
+    socket.onopen = () => {
+      console.log("connected to server");
+    };
+    socket.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
 
-    // Simulate successful connection
-    setTimeout(() => {
-      setIsConnected(true);
-    }, 500);
+      const data = JSON.parse(msg.data);
+      console.log("message from server!!!", data);
+      setRecentBundles((prev) => [data, ...prev].slice(0, 5));
+    };
   };
 
   const disconnect = () => {
-    console.log("Disconnecting from WebSocket");
     setIsConnected(false);
   };
 
   useEffect(() => {
-    // Connect on component mount
+    console.log("connecting to socket");
     connect();
 
-    // For demo purposes, simulate receiving transactions periodically
-    let interval: NodeJS.Timeout;
-
-    if (isConnected) {
-      interval = setInterval(() => {
-        // Create a new transaction by modifying one of the existing ones
-        // const randomIndex = Math.floor(
-        //   Math.random() * initialTransactions.length
-        // );
-        // const baseTx = initialTransactions[randomIndex];
-
-        // const newTx: Transaction = {
-        //   ...baseTx,
-        //   id: `tx-${Date.now()}`,
-        //   timestamp: Date.now(),
-        //   profit: baseTx.profit * (0.85 + Math.random() * 0.3),
-        //   cost: baseTx.cost * (0.85 + Math.random() * 0.3),
-        //   extra: baseTx.extra * (0.85 + Math.random() * 0.3),
-        // };
-
-        // setLastMessage(newTx);
-        // setRecentTransactions((prev) => [newTx, ...prev.slice(0, 4)]);
-      }, 8000);
-    }
-
     return () => {
-      clearInterval(interval);
       disconnect();
     };
-  }, [isConnected]);
+  }, []);
 
   const value = {
     isConnected,
     // lastMessage,
-    // recentTransactions,
+    recentBundles,
     connect,
     disconnect,
   };

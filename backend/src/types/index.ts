@@ -19,8 +19,13 @@ export interface TokenPopularity {
   profit: number;
 }
 
+export type TradeWithTokens = Trade & {
+  baseTokenSymbol: string;
+  quoteTokenSymbol: string;
+};
+
 export type MevBundleWithTrades = MevBundle & {
-  trades: Trade[];
+  trades: TradeWithTokens[];
 };
 
 export type MevBundleWithProfit = MevBundleWithTrades & {
@@ -41,6 +46,7 @@ export interface ArbitrageStatistics {
   averageNumberOfTransactions: number;
   topArbitrageTokens: TokenPopularity[];
   topArbitragePrograms: ProgramPopularity[];
+  uniqueArbitragePrograms: number;
 }
 
 export interface SandwichStatistics {

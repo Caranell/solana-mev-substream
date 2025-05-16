@@ -53,3 +53,8 @@ model Trade {
 
   @@map("trades") // Maps this model to the "trades" table in the database
 }
+
+model Tokens {
+  address String @id
+  symbol  String
+} 

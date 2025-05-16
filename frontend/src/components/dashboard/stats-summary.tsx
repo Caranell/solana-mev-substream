@@ -23,7 +23,11 @@ interface SandwichStatisticsOnly {
   attackers: number;
 }
 
-type ArbitrageStats = BaseBundlesStatistics;
+interface ArbitrageStatisticsOnly {
+  uniqueArbitragePrograms: number;
+}
+
+type ArbitrageStats = BaseBundlesStatistics & ArbitrageStatisticsOnly;
 type SandwichStats = BaseBundlesStatistics & SandwichStatisticsOnly;
 
 interface StatsSummaryProps {
@@ -33,57 +37,66 @@ interface StatsSummaryProps {
 
 export function StatsSummary({ data, transactionType }: StatsSummaryProps) {
   const isSandwich = transactionType === MEV_TYPES.SANDWICH;
+  console.log('MEV_TYPES.SANDWICH', MEV_TYPES)
+  console.log('isSandwich', isSandwich)
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-      <DataCard
-        title="Total Bundles"
-        value={formatNumber(data?.numberOfBundles, 0)}
-        // icon={<Package className="h-4 w-4" />}
-        subtitle="Bundles processed"
-      />
-      <DataCard
-        title="Total Transactions"
-        value={formatNumber(data?.numberOfTransactions, 0)}
-        // icon={
-        //   isSandwich ? (
-        //     <Sandwich className="h-4 w-4" />
-        //   ) : (
-        //     <ArrowRightLeft className="h-4 w-4" />
-        //   )
-        // }
-        subtitle={`${
-          transactionType.charAt(0).toUpperCase() + transactionType.slice(1)
-        }`}
-      />
-      <DataCard
-        title="Total Profit"
-        value={formatNumber(data?.totalProfit)}
-        // icon={<Banknote className="h-4 w-4" />}
-        subtitle="SOL"
-      />
-      <DataCard
-        title="Unique Senders"
-        value={formatNumber(data?.uniqueSenders, 0)}
-        // icon={<Users className="h-4 w-4" />}
-        subtitle="Unique addresses"
-      />
-      {isSandwich && (
-        <>
-          <DataCard
-            title="Victims"
-            value={formatNumber((data as SandwichStats)?.victims, 0)}
-            // icon={<UserX className="h-4 w-4 text-red-500" />}
-            subtitle="Affected users"
-          />
-          <DataCard
-            title="Unique Attackers"
-            value={formatNumber((data as SandwichStats)?.attackers, 0)}
-            // icon={<ShieldAlert className="h-4 w-4" />}
-            subtitle="Unique bots"
-          />
-        </>
-      )}
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-4 lg:grid-cols-4">
+      {
+        isSandwich ? (
+          <SandwichSummary data={data as SandwichStats} />
+        ) : (
+          <ArbitrageSummary data={data as ArbitrageStats} />
+        )
+      }
     </div>
+  );
+}
+
+export function SandwichSummary({ data }: { data: SandwichStats }) {
+  return (
+    <>
+      <DataCard
+        title="Sandwiches"
+        value={formatNumber((data as SandwichStats)?.numberOfBundles, 0)}
+      />
+      <DataCard
+        title="Profit"
+        value={`${formatNumber(data?.totalProfit)} SOL`}
+        subtitle="Value extracted from victims"
+      />
+      <DataCard
+        title="Attackers"
+        value={formatNumber((data as SandwichStats)?.attackers, 0)}
+      />
+      <DataCard
+        title="Victims"
+        value={formatNumber((data as SandwichStats)?.victims, 0)}
+      />
+    </>
+  );
+}
+export function ArbitrageSummary({ data }: { data: ArbitrageStats }) {
+  return (
+    <>
+      <DataCard
+        title="Arbitrages"
+        value={formatNumber(data?.numberOfBundles, 0)}
+      />
+      <DataCard
+        title="Revenue"
+        value={`${formatNumber(data?.totalProfit)} SOL`}
+      />
+      <DataCard
+        title="Searchers"
+        value={formatNumber(data?.uniqueSenders, 0)}
+        subtitle="Number of searchers doing arbs"
+      />
+      <DataCard
+        title="Arb programs"
+        value={formatNumber(data?.uniqueArbitragePrograms, 0)}
+        subtitle="Unique arb programs"
+      />
+    </>
   );
 }

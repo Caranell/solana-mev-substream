@@ -24,6 +24,7 @@
     "noPropertyAccessFromIndexSignature": false, // Allow property access from index signature
     "noUncheckedIndexedAccess": false, // Do not add 'undefined' to index signature results
     "noUnusedLocals": false, // Do not report errors for unused local variables
-    "noUnusedParameters": false // Do not report errors for unused parameters
+    "noUnusedParameters": false, // Do not report errors for unused parameters,
+    "allowTsIgnore": true
   }
 }

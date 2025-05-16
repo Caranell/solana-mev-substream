@@ -6,6 +6,7 @@ import {
   getTopBundles,
   getTopSandwichPools,
   getTopSearchers,
+  getUniqueArbitragePrograms,
 } from "./utils";
 import {
   ArbitrageStatistics,
@@ -19,10 +20,15 @@ import {
 } from "../types";
 import { MevBundle } from "@prisma/client";
 
-const getLatestBundle = async (): Promise<MevBundle | null> => {
+const getLatestBundle = async (): Promise<MevBundleWithProfit> => {
   const latestBundle = await db.getLatestBundle();
 
-  return latestBundle;
+  const bundleWithProfit = {
+    ...latestBundle,
+    profit: calculateBundleProfit(latestBundle),
+  };
+
+  return bundleWithProfit;
 };
 
 const getMEVBundles = async ({
@@ -44,22 +50,49 @@ const getMEVBundles = async ({
     noLimit,
   });
 
-  const bundlesWithProfit = mevBundles.map((bundle) => {
-    return {
-      ...bundle,
-      profit: calculateBundleProfit(bundle),
-    };
-  });
+  const bundlesWithProfit = await Promise.all(
+    mevBundles.map(async (bundle) => {
+      const tradesWithTokens = await Promise.all(
+        bundle.trades.map(async (trade) => {
+          const baseToken = await db.getTokenSymbol(trade.baseMint);
+          const quoteToken = await db.getTokenSymbol(trade.quoteMint);
 
-  const filteredBundles = bundlesWithProfit.filter((bundle) => {
-    return bundle.profit > 0;
-  });
+          return {
+            ...trade,
+            baseTokenSymbol: baseToken,
+            quoteTokenSymbol: quoteToken,
+          };
+        })
+      );
 
-  return filteredBundles;
+      return {
+        ...bundle,
+        trades: tradesWithTokens,
+        profit: calculateBundleProfit(bundle),
+      };
+    })
+  );
+
+  return bundlesWithProfit;
+
+
+  // const filteredBundles = bundlesWithProfit.filter((bundle) => {
+  //   return bundle.profit > 0;
+  // });
+
+  // return filteredBundles;
 };
 
-const getBundlesStatistics = (bundles: MevBundleWithProfit[]): BundlesStatistics => {
+const getBundlesStatistics = (
+  bundles: MevBundleWithProfit[]
+): BundlesStatistics => {
+  if (bundles.length === 0) {
+    return {} as BundlesStatistics;
+  }
+
   const mevType = bundles[0].mevType;
+
+  console.log("mevType", mevType);
 
   const baseStats: BaseBundlesStatistics = {
     numberOfBundles: bundles.length,
@@ -74,8 +107,9 @@ const getBundlesStatistics = (bundles: MevBundleWithProfit[]): BundlesStatistics
     topBundles: getTopBundles(bundles).slice(0, 10),
   };
 
-  if (mevType === "ARBITRAGE") {
+  if (mevType === "1") {
     const arbStats = getArbitrageBundlesStatistics(bundles);
+    console.log("arbStats", arbStats);
     return {
       ...baseStats,
       ...arbStats,
@@ -98,11 +132,13 @@ const getArbitrageBundlesStatistics = (
 
   const topArbitrageTokens = getTopArbitrageTokens(bundles).slice(0, 10);
   const topArbitragePrograms = getTopArbitragePrograms(bundles).slice(0, 10);
+  const uniqueArbitragePrograms = getUniqueArbitragePrograms(bundles);
 
   return {
     averageNumberOfTransactions,
     topArbitrageTokens,
     topArbitragePrograms,
+    uniqueArbitragePrograms,
   };
 };
 
@@ -140,8 +176,22 @@ const getSanwichBundlesStatistics = (
   };
 };
 
+let lastBundleCacheId: string | null = null;
+
+const checkForNewBundles = async () => {
+  const latestBundle = await getLatestBundle();
+
+  if (latestBundle && latestBundle.bundleId !== lastBundleCacheId) {
+    lastBundleCacheId = latestBundle.bundleId;
+    return latestBundle;
+  }
+
+  return null;
+};
+
 export default {
   getLatestBundle,
   getMEVBundles,
   getBundlesStatistics,
+  checkForNewBundles,
 };

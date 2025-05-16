@@ -50,20 +50,6 @@ const calculateArbitrageProfit = (bundle: MevBundleWithTrades): number => {
   return profit;
 };
 
-const getTokensFromTrade = (trade: Trade): [number, number] => {
-  let solAmount = 0;
-  let tokenAmount = 0;
-
-  if (trade.baseMint === SOL_ADDRESS) {
-    solAmount = trade.baseAmount;
-    tokenAmount = trade.quoteAmount;
-  } else {
-    solAmount = trade.quoteAmount;
-    tokenAmount = trade.baseAmount;
-  }
-
-  return [solAmount, tokenAmount];
-};
 
 const calculateSanwichProfit = (bundle: MevBundleWithTrades): number => {
   const { trades } = bundle;
@@ -73,22 +59,14 @@ const calculateSanwichProfit = (bundle: MevBundleWithTrades): number => {
   const firstTrade = sortedTrades[0];
   const lastTrade = sortedTrades[sortedTrades.length - 1];
 
-  const solSpent =
-    firstTrade.baseMint === SOL_ADDRESS
-      ? firstTrade.baseAmount
-      : firstTrade.quoteAmount;
+  const [solAmountFirstTrade, tokenAmountFirstTrade] = getTokensFromTrade(firstTrade);
+  const [solAmountLastTrade, tokenAmountLastTrade] = getTokensFromTrade(lastTrade);
 
-  const solReceived =
-    lastTrade.baseMint === SOL_ADDRESS
-      ? lastTrade.baseAmount
-      : lastTrade.quoteAmount;
+  if (Math.abs(tokenAmountFirstTrade) !== Math.abs(tokenAmountLastTrade)) {
+    return 0;
+  }
 
-  console.log("txId", bundle.trades[0].txId);
-
-  console.log("solSpent", solSpent);
-  console.log("solReceived", solReceived);
-
-  const profit = Math.abs(solReceived) - Math.abs(solSpent);
+  const profit = Math.abs(solAmountLastTrade) - Math.abs(solAmountFirstTrade);
 
   return profit;
 };
@@ -184,6 +162,21 @@ export const getTopArbitrageTokens = (
   return tokenPopularityArray;
 };
 
+export const getUniqueArbitragePrograms = (
+  bundles: MevBundleWithProfit[]
+): number => {
+  const programs = bundles
+    .map((bundle) => bundle.trades[0].outerProgram)
+    .filter(
+      (program) =>
+        !KNOWN_AMM_PROGRAMS_TRAITS.some((trait) => program.includes(trait))
+    );
+
+  const uniquePrograms = Array.from(new Set(programs));
+
+  return uniquePrograms.length;
+};
+
 export const getTopArbitragePrograms = (
   bundles: MevBundleWithProfit[]
 ): ProgramPopularity[] => {
@@ -209,4 +202,19 @@ export const getTopArbitragePrograms = (
   programPopularityArray.sort((a, b) => b.profit - a.profit);
 
   return programPopularityArray;
+};
+
+const getTokensFromTrade = (trade: Trade): [number, number] => {
+  let solAmount = 0;
+  let tokenAmount = 0;
+
+  if (trade.baseMint === SOL_ADDRESS) {
+    solAmount = trade.baseAmount;
+    tokenAmount = trade.quoteAmount;
+  } else {
+    solAmount = trade.quoteAmount;
+    tokenAmount = trade.baseAmount;
+  }
+
+  return [solAmount, tokenAmount];
 };

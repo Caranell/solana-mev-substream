@@ -10,6 +10,11 @@ import { useQuery } from "@tanstack/react-query";
 import { getBundles, getStatistics } from "@/lib/api";
 
 
+const MEV_TYPES_LABELS = {
+  [MEV_TYPES.ARBITRAGE]: "🔄 Arbitrages",
+  [MEV_TYPES.SANDWICH]: "🥪 Sandwiches",
+};
+
 export function Dashboard() {
   console.log('dashboard')
   const [timeFilter, setTimeFilter] = useState<TimeFilter>(
@@ -40,11 +45,11 @@ export function Dashboard() {
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {txType.charAt(0).toUpperCase() + txType.slice(1)}
+            {MEV_TYPES_LABELS[txType]}
           </h1>
-          <p className="text-muted-foreground">
-            Monitor {txType} transactions on Solana
-          </p>
+          {/* <p className="text-muted-foreground">
+            Monitor {MEV_TYPES_LABELS[txType]} transactions on Solana
+          </p> */}
         </div>
         <TimeFilterButtons
           filters={TIME_FILTERS}
@@ -60,11 +65,11 @@ export function Dashboard() {
         className="space-y-4"
       >
         <TabsList>
-          <TabsTrigger value={MEV_TYPES.SANDWICH}>Sandwiches</TabsTrigger>
-          <TabsTrigger value={MEV_TYPES.ARBITRAGE}>Arbitrages</TabsTrigger>
+          <TabsTrigger value={MEV_TYPES.ARBITRAGE}>🔄 Arbitrages</TabsTrigger>
+          <TabsTrigger value={MEV_TYPES.SANDWICH}>🥪 Sandwiches</TabsTrigger>
         </TabsList>
         <TabsContent value={MEV_TYPES.SANDWICH} className="space-y-4">
-          <StatsSummary data={stats} transactionType="sandwiches" />
+          <StatsSummary data={stats} transactionType={MEV_TYPES.SANDWICH} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
               <TransactionTable
@@ -75,12 +80,12 @@ export function Dashboard() {
               />
             </div>
             <div>
-              <TransactionStream />
+              <TransactionStream mevType={MEV_TYPES.SANDWICH} />
             </div>
           </div>
         </TabsContent>
         <TabsContent value={MEV_TYPES.ARBITRAGE} className="space-y-4">
-          <StatsSummary data={stats} transactionType="arbitrages" />
+          <StatsSummary data={stats} transactionType={MEV_TYPES.ARBITRAGE} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
               <TransactionTable
@@ -91,7 +96,7 @@ export function Dashboard() {
               />
             </div>
             <div>
-              <TransactionStream />
+              <TransactionStream mevType={MEV_TYPES.ARBITRAGE} />
             </div>
           </div>
         </TabsContent>
