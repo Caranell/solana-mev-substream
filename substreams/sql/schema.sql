@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS "mev_bundles" (
   "block_slot" BIGINT NOT NULL,
   "signer" TEXT NOT NULL, -- Signer of the bundle
   "trader" TEXT NOT NULL, -- Trader associated with the bundle
-  "mev_type" TEXT NOT NULL -- Type of MEV (e.g., ARBITRAGE, SANDWICH)
+  "mev_type" TEXT NOT NULL, -- Type of MEV (e.g., ARBITRAGE, SANDWICH)
+  "profit" DOUBLE PRECISION NOT NULL
 );
 
 CREATE TABLE trades (

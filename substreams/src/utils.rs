@@ -153,7 +153,74 @@ pub fn format_bundle(mev_bundle: &Vec<TradeData>, mev_type: MevType) -> MevBundl
                 trade
             })
             .collect(),
+        profit: Some(calculate_bundle_profit(mev_bundle, mev_type)),
     };
 
     return bundle;
+}
+
+pub fn calculate_bundle_profit(bundle: &Vec<TradeData>, mev_type: MevType) -> f64 {
+    match mev_type {
+        MevType::Arbitrage => calculate_arbitrage_profit(bundle),
+        MevType::Sandwich => calculate_sandwich_profit(bundle),
+    }
+}
+
+fn calculate_arbitrage_profit(bundle: &Vec<TradeData>) -> f64 {
+    let mut sol_spent = 0.0;
+    let mut sol_received = 0.0;
+
+    let mut trades = bundle.clone();
+
+    trades.sort_by_key(|trade| trade.inner_instruction_index);
+
+    for trade in trades {
+        if trade.base_mint == WSOL_ADDRESS || trade.quote_mint == WSOL_ADDRESS {
+            let (sol_amount, _) = get_tokens_from_trade(&trade);
+
+            if sol_amount < 0.0 {
+                sol_spent += sol_amount;
+            } else {
+                sol_received += sol_amount;
+            }
+        }
+    }
+
+    return sol_received.abs() - sol_spent.abs();
+}
+
+fn calculate_sandwich_profit(bundle: &Vec<TradeData>) -> f64 {
+    let mut trades = bundle.clone();
+
+    trades.sort_by_key(|trade| trade.tx_index);
+
+    let first_trade = trades.first().unwrap();
+    let last_trade = trades.last().unwrap();
+
+    let (sol_amount_first_trade, token_amount_first_trade) = get_tokens_from_trade(first_trade);
+    let (sol_amount_last_trade, token_amount_last_trade) = get_tokens_from_trade(last_trade);
+
+    if token_amount_first_trade.abs() != token_amount_last_trade.abs() {
+        return 0.0;
+    }
+
+    let profit = sol_amount_last_trade.abs() - sol_amount_first_trade.abs();
+
+    return profit;
+}
+
+fn get_tokens_from_trade(trade: &TradeData) -> (f64, f64) {
+    let sol_amount = if trade.base_mint == WSOL_ADDRESS {
+        trade.base_amount
+    } else {
+        trade.quote_amount
+    };
+
+    let token_amount = if trade.base_mint == WSOL_ADDRESS {
+        trade.quote_amount
+    } else {
+        trade.base_amount
+    };
+
+    return (sol_amount, token_amount);
 }

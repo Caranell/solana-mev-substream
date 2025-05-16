@@ -31,6 +31,8 @@ pub struct MevBundle {
     pub trades: ::prost::alloc::vec::Vec<TradeData>,
     #[prost(string, optional, tag="9")]
     pub bundle_id: ::core::option::Option<::prost::alloc::string::String>,
+    #[prost(double, optional, tag="10")]
+    pub profit: ::core::option::Option<f64>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]

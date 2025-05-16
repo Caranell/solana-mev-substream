@@ -34,6 +34,7 @@ const getStatistics = async (
     mevType: request.query.mevType,
     noLimit: true,
   });
+  await bundlesService.fillMissingTokens(bundles);
   console.log("got statistics");
   const stats = bundlesService.getBundlesStatistics(bundles);
   console.log("formatted statistics");

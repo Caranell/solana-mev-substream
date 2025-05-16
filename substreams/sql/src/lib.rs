@@ -46,7 +46,8 @@ fn create_db_changes_for_bundle(
         .change("block_slot", (None, bundle.block_slot))
         .change("signer", (None, bundle.signer))
         .change("trader", (None, bundle.trader))
-        .change("mev_type", (None, bundle.mev_type));
+        .change("mev_type", (None, bundle.mev_type))
+        .change("profit", (None, bundle.profit.unwrap().to_string()));
 
     *change_index += 1;
 

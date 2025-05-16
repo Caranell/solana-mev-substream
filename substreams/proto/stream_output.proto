@@ -24,6 +24,7 @@ message MevBundle {
   required MevType mev_type = 6;
   repeated TradeData trades = 8;
   optional string bundle_id = 9;
+  optional double profit = 10;
 }
 
 message MevBundleSummary {}
