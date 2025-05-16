@@ -51,7 +51,11 @@ const getMEVBundles = async ({
     };
   });
 
-  return bundlesWithProfit;
+  const filteredBundles = bundlesWithProfit.filter((bundle) => {
+    return bundle.profit > 0;
+  });
+
+  return filteredBundles;
 };
 
 const getBundlesStatistics = (bundles: MevBundleWithProfit[]): BundlesStatistics => {

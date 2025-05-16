@@ -29,10 +29,6 @@ const getStatistics = async (
   const bundles = await bundlesService.getMEVBundles({
     period: request.query.period,
     mevType: request.query.mevType,
-    limit: request.query.limit,
-    offset: request.query.offset,
-    orderBy: request.query.orderBy,
-    orderDirection: request.query.orderDirection,
     noLimit: true,
   });
 

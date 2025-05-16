@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowDownIcon, ArrowUpIcon } from '@radix-ui/react-icons';
 import { formatCurrency, formatDateTime } from '@/lib/utils';

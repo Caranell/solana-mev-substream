@@ -1,4 +1,4 @@
-export type TimeFilter = '24H' | '7D' | '30D';
+export type TimeFilter = '1' | '7' | '14';
 
 export type TransactionType = 'sandwich' | 'arbitrage';
 
@@ -25,7 +25,4 @@ export interface StatsSummary {
   attackers: number;
 }
 
-export interface StatsData {
-  sandwiches: StatsSummary;
-  arbitrages: StatsSummary;
-}
+

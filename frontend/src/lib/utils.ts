@@ -6,7 +6,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatNumber(num: number, precision = 2): string {
+export function formatNumber(num: number | undefined, precision = 2): string {
+  if (num === undefined) return "0";
   if (num >= 1000000) {
     return `${(num / 1000000).toFixed(precision)}M`;
   }
@@ -38,15 +39,17 @@ export function filterTransactionsByTimeRange(transactions: Transaction[], timeF
   let timeRange: number;
   
   switch (timeFilter) {
-    case '24H':
+    case '1D':
       timeRange = 24 * 60 * 60 * 1000; // 24 hours in ms
       break;
     case '7D':
       timeRange = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
       break;
-    case '30D':
+    case '14D':
+      timeRange = 14 * 24 * 60 * 60 * 1000; // 14 days in ms
+      break;
     default:
-      timeRange = 30 * 24 * 60 * 60 * 1000; // 30 days in ms
+      timeRange = 1 * 24 * 60 * 60 * 1000; // 1 day in ms
       break;
   }
   

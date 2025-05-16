@@ -1,50 +1,49 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { CircleHelp, RefreshCcw } from 'lucide-react';
-import { Transaction } from '@/types';
-import { truncateAddress } from '@/lib/utils';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+// import { CircleHelp, RefreshCcw } from "lucide-react";
+import { Transaction } from "@/types";
+// import { truncateAddress } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-interface TransactionStreamProps {
-  initialTransactions: Transaction[];
-  websocketUrl?: string;
-}
+export function TransactionStream() {
+  const [transactions] = useState<Transaction[]>([]);
+  const [isConnected] = useState(false);
+  const [lastUpdate] = useState<Date | null>(null);
 
-export function TransactionStream({ 
-  initialTransactions, 
-  websocketUrl 
-}: TransactionStreamProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions.slice(0, 5));
-  const [isConnected, setIsConnected] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  // useEffect(() => {
+  //   // Simulating WebSocket connection for demo purposes
+  //   setIsConnected(true);
+  //   setLastUpdate(new Date());
 
-  useEffect(() => {
-    // Simulating WebSocket connection for demo purposes
-    setIsConnected(true);
-    setLastUpdate(new Date());
+  //   // Mock new transactions coming in
+  //   const interval = setInterval(() => {
+  //     // Generate a random transaction based on existing ones
+  //     const randomIndex = Math.floor(
+  //       Math.random() * initialTransactions.length
+  //     );
+  //     const randomTx = { ...initialTransactions[randomIndex] };
 
-    // Mock new transactions coming in
-    const interval = setInterval(() => {
-      // Generate a random transaction based on existing ones
-      const randomIndex = Math.floor(Math.random() * initialTransactions.length);
-      const randomTx = {...initialTransactions[randomIndex]};
-      
-      // Modify it slightly to simulate a new transaction
-      randomTx.id = `new-${Date.now()}`;
-      randomTx.timestamp = Date.now();
-      randomTx.profit = randomTx.profit * (0.9 + Math.random() * 0.2);
-      
-      // Add new transaction to the top and remove last one
-      setTransactions(prev => [randomTx, ...prev.slice(0, 4)]);
-      setLastUpdate(new Date());
-    }, 5000);
+  //     // Modify it slightly to simulate a new transaction
+  //     randomTx.id = `new-${Date.now()}`;
+  //     randomTx.timestamp = Date.now();
+  //     randomTx.profit = randomTx.profit * (0.9 + Math.random() * 0.2);
 
-    return () => {
-      clearInterval(interval);
-      setIsConnected(false);
-    };
-  }, [initialTransactions]);
+  //     // Add new transaction to the top and remove last one
+  //     setTransactions((prev) => [randomTx, ...prev.slice(0, 4)]);
+  //     setLastUpdate(new Date());
+  //   }, 5000);
+
+  //   return () => {
+  //     clearInterval(interval);
+  //     setIsConnected(false);
+  //   };
+  // }, []);
 
   return (
     <Card>
@@ -54,7 +53,7 @@ export function TransactionStream({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <CircleHelp className="h-4 w-4 text-muted-foreground" />
+                {/* <CircleHelp className="h-4 w-4 text-muted-foreground" /> */}
               </TooltipTrigger>
               <TooltipContent>
                 <p>Live transaction stream of MEV activity</p>
@@ -64,28 +63,42 @@ export function TransactionStream({
         </div>
         <div className="flex items-center gap-2">
           {isConnected ? (
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 gap-1">
-              <span className="h-2 w-2 rounded-full bg-green-500"></span> Connected
+            <Badge
+              variant="outline"
+              className="bg-green-50 text-green-700 border-green-200 gap-1"
+            >
+              <span className="h-2 w-2 rounded-full bg-green-500"></span>{" "}
+              Connected
             </Badge>
           ) : (
-            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 gap-1">
-              <span className="h-2 w-2 rounded-full bg-red-500"></span> Disconnected
+            <Badge
+              variant="outline"
+              className="bg-red-50 text-red-700 border-red-200 gap-1"
+            >
+              <span className="h-2 w-2 rounded-full bg-red-500"></span>{" "}
+              Disconnected
             </Badge>
           )}
-          <RefreshCcw className="h-4 w-4 text-muted-foreground cursor-pointer" />
+          {/* <RefreshCcw className="h-4 w-4 text-muted-foreground cursor-pointer" /> */}
         </div>
       </CardHeader>
       <CardContent className="pb-2">
         <div className="text-xs text-muted-foreground mb-2">
-          Last update: {lastUpdate ? new Intl.DateTimeFormat('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-          }).format(lastUpdate) : 'Never'}
+          Last update:{" "}
+          {lastUpdate
+            ? new Intl.DateTimeFormat("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+              }).format(lastUpdate)
+            : "Never"}
         </div>
         <div className="space-y-4">
           {transactions.map((tx) => (
-            <div key={tx.id} className="flex flex-col gap-1 animate-in slide-in-from-right-5 duration-300">
+            <div
+              key={tx.id}
+              className="flex flex-col gap-1 animate-in slide-in-from-right-5 duration-300"
+            >
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col">
                   <div className="text-xs text-muted-foreground">Bot</div>
@@ -95,12 +108,21 @@ export function TransactionStream({
                   <div className="text-xs text-muted-foreground">
                     {new Date(tx.timestamp).toLocaleTimeString()}
                   </div>
-                  <div className="font-mono text-xs">{tx.id.substring(0, 12)}</div>
+                  <div className="font-mono text-xs">
+                    {tx.id.substring(0, 12)}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 items-center mt-1">
                 <div className="flex items-center gap-1">
-                  <Badge variant="outline" className={tx.type === 'sandwich' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-blue-50 text-blue-700 border-blue-200'}>
+                  <Badge
+                    variant="outline"
+                    className={
+                      tx.type === "sandwich"
+                        ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                        : "bg-blue-50 text-blue-700 border-blue-200"
+                    }
+                  >
                     {tx.type}
                   </Badge>
                 </div>

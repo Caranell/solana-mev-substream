@@ -1,10 +1,21 @@
 import { TimeFilter } from '@/types';
 
 export const TIME_FILTERS: { value: TimeFilter; label: string }[] = [
-  { value: '24H', label: '24H' },
-  { value: '7D', label: '7D' },
-  { value: '30D', label: '30D' },
+  { value: '1', label: '1D' },
+  { value: '7', label: '7D' },
+  { value: '14', label: '14D' },
 ];
+
+export const TIME_MAPPING = {
+  ONE_DAY: "1D",
+  ONE_WEEK: "7D",
+  TWO_WEEKS: "14D",
+};
+
+export const MEV_TYPES = {
+  ARBITRAGE: "1",
+  SANDWICH: "2",
+};
 
 export const MOCK_TRANSACTIONS = [
   {

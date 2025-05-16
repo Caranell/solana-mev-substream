@@ -1,6 +1,23 @@
 import { MevBundle } from "@prisma/client";
 import { Trade } from "@prisma/client";
-import { SearcherProfit, TokenPopularity, ProgramPopularity, PoolProfit } from "../services/utils";
+
+export interface PoolProfit {
+  pool: string;
+  profit: number;
+}
+export interface SearcherProfit {
+  searcherAddress: string;
+  profit: number;
+}
+export interface ProgramPopularity {
+  program: string;
+  profit: number;
+}
+
+export interface TokenPopularity {
+  token: string;
+  profit: number;
+}
 
 export type MevBundleWithTrades = MevBundle & {
   trades: Trade[];
@@ -32,9 +49,13 @@ export interface SandwichStatistics {
   topSandwichPools: PoolProfit[];
 }
 
-export type ArbitrageBundlesStatistics = BaseBundlesStatistics & ArbitrageStatistics;
-export type SandwichBundlesStatistics = BaseBundlesStatistics & SandwichStatistics;
-export type BundlesStatistics = ArbitrageBundlesStatistics | SandwichBundlesStatistics;
+export type ArbitrageBundlesStatistics = BaseBundlesStatistics &
+  ArbitrageStatistics;
+export type SandwichBundlesStatistics = BaseBundlesStatistics &
+  SandwichStatistics;
+export type BundlesStatistics =
+  | ArbitrageBundlesStatistics
+  | SandwichBundlesStatistics;
 
 export interface GetMEVBundlesParams {
   period?: string;

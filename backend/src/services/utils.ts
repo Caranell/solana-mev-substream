@@ -1,4 +1,11 @@
-import { MevBundleWithProfit, MevBundleWithTrades } from "../types";
+import {
+  MevBundleWithProfit,
+  MevBundleWithTrades,
+  PoolProfit,
+  ProgramPopularity,
+  SearcherProfit,
+  TokenPopularity,
+} from "../types";
 import {
   KNOWN_AMM_PROGRAMS_TRAITS,
   SOL_ADDRESS,
@@ -86,11 +93,6 @@ const calculateSanwichProfit = (bundle: MevBundleWithTrades): number => {
   return profit;
 };
 
-export interface SearcherProfit {
-  searcherAddress: string;
-  profit: number;
-}
-
 export const getTopSearchers = (
   bundles: MevBundleWithProfit[]
 ): SearcherProfit[] => {
@@ -120,11 +122,6 @@ export const getTopBundles = (
   return sortedBundles;
 };
 
-export interface PoolProfit {
-  pool: string;
-  profit: number;
-}
-
 export const getTopSandwichPools = (
   bundles: MevBundleWithProfit[]
 ): PoolProfit[] => {
@@ -150,11 +147,6 @@ export const getTopSandwichPools = (
 
   return poolsSortedByProfit;
 };
-
-export interface TokenPopularity {
-  token: string;
-  profit: number; // This is actually popularity count, not profit
-}
 
 export const getTopArbitrageTokens = (
   bundles: MevBundleWithProfit[]
@@ -191,11 +183,6 @@ export const getTopArbitrageTokens = (
 
   return tokenPopularityArray;
 };
-
-export interface ProgramPopularity {
-  program: string;
-  profit: number; // This is actually popularity count, not profit
-}
 
 export const getTopArbitragePrograms = (
   bundles: MevBundleWithProfit[]

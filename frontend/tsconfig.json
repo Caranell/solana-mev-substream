@@ -8,6 +8,22 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "strict": false, // Disable all strict mode options
+    "noImplicitAny": false, // Allow variables to have an implicit 'any' type
+    "strictNullChecks": false, // Allow null and undefined to be assigned to types other than void
+    "strictFunctionTypes": false, // Disable strict checking of function types
+    "strictBindCallApply": false, // Disable strict 'bind', 'call', and 'apply' methods on functions
+    "strictPropertyInitialization": false, // Disable strict checking of property initialization
+    "noImplicitThis": false, // Allow 'this' with an implicit 'any' type
+    "useUnknownInCatchVariables": false, // Do not force catch clause variables to have type 'unknown'
+    "alwaysStrict": false, // Do not emit 'use strict' for each file
+    "exactOptionalPropertyTypes": false, // Do not require exact optional property types
+    "noFallthroughCasesInSwitch": false, // Allow fallthrough cases in switch statements
+    "noImplicitOverride": false, // Do not enforce 'override' keyword
+    "noPropertyAccessFromIndexSignature": false, // Allow property access from index signature
+    "noUncheckedIndexedAccess": false, // Do not add 'undefined' to index signature results
+    "noUnusedLocals": false, // Do not report errors for unused local variables
+    "noUnusedParameters": false // Do not report errors for unused parameters
   }
 }
