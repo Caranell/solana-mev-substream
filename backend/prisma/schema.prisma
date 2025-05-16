@@ -57,4 +57,6 @@ model Trade {
 model Tokens {
   address String @id
   symbol  String
+
+  @@map("tokens")
 } 

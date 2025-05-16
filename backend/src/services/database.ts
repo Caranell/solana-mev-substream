@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { GetMEVBundlesParams, MevBundleWithTrades } from "../types";
-import { getTokenName } from "./helius";
+import { getTokenMetadata } from "./helius";
 
 const prisma = new PrismaClient();
 
@@ -31,15 +31,26 @@ const getTokenSymbol = async (tokenAddress: string) => {
     return token.symbol;
   }
 
-  const symbol = await getTokenName(tokenAddress);
+  const metadata = await getTokenMetadata(tokenAddress);
+  console.log("metadata", metadata);
   await prisma.tokens.create({
     data: {
       address: tokenAddress,
-      symbol,
+      symbol: metadata.symbol,
     },
   });
 
-  return symbol;
+  return metadata.symbol;
+};
+
+const getTokens = async (tokens: string[]) => {
+  const dbTokens = await prisma.tokens.findMany({
+    where: {
+      address: { in: tokens },
+    },
+  });
+
+  return dbTokens;
 };
 
 const getMEVBundles = async ({
@@ -92,8 +103,19 @@ const getMEVBundles = async ({
   return mevBundles as MevBundleWithTrades[];
 };
 
+export const createTokens = async (tokens: { address: string; symbol: string }[]) => {
+  await prisma.tokens.createMany({
+    data: tokens.map((token) => ({
+      address: token.address,
+      symbol: token.symbol || "Unknown",
+    })),
+  });
+};
+
 export default {
   getLatestBundle,
   getMEVBundles,
   getTokenSymbol,
+  getTokens,
+  createTokens,
 };

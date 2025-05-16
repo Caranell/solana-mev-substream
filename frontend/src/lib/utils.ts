@@ -17,8 +17,8 @@ export function formatNumber(num: number | undefined, precision = 2): string {
   return num.toFixed(precision);
 }
 
-export function formatCurrency(num: number): string {
-  return formatNumber(num, 2);
+export function formatCurrency(num: number, precision = 2): string {
+  return formatNumber(num, precision);
 }
 
 export function formatDate(timestamp: number): string {
@@ -30,7 +30,7 @@ export function formatTime(timestamp: number): string {
 }
 
 export function formatDateTime(timestamp: number): string {
-  const date = new Date(timestamp);
+  const date = new Date(timestamp*1000);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 }
 

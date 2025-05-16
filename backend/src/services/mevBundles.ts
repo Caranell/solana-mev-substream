@@ -19,6 +19,7 @@ import {
   GetMEVBundlesParams,
 } from "../types";
 import { MevBundle } from "@prisma/client";
+import { getTokensMetadata } from "./helius";
 
 const getLatestBundle = async (): Promise<MevBundleWithProfit> => {
   const latestBundle = await db.getLatestBundle();
@@ -50,31 +51,16 @@ const getMEVBundles = async ({
     noLimit,
   });
 
-  const bundlesWithProfit = await Promise.all(
-    mevBundles.map(async (bundle) => {
-      const tradesWithTokens = await Promise.all(
-        bundle.trades.map(async (trade) => {
-          const baseToken = await db.getTokenSymbol(trade.baseMint);
-          const quoteToken = await db.getTokenSymbol(trade.quoteMint);
+  const bundlesWithProfit = mevBundles.map((bundle) => {
+    return {
+      ...bundle,
+      profit: calculateBundleProfit(bundle),
+    };
+  });
 
-          return {
-            ...trade,
-            baseTokenSymbol: baseToken,
-            quoteTokenSymbol: quoteToken,
-          };
-        })
-      );
-
-      return {
-        ...bundle,
-        trades: tradesWithTokens,
-        profit: calculateBundleProfit(bundle),
-      };
-    })
-  );
+  // await fillMissingTokens(bundlesWithProfit);
 
   return bundlesWithProfit;
-
 
   // const filteredBundles = bundlesWithProfit.filter((bundle) => {
   //   return bundle.profit > 0;
@@ -83,9 +69,40 @@ const getMEVBundles = async ({
   // return filteredBundles;
 };
 
+const fillMissingTokens = async (bundles: MevBundleWithProfit[]) => {
+  const uniqueTokens = Array.from(
+    new Set(
+      bundles
+        .flatMap((bundle) =>
+          bundle.trades.map((trade) => [trade.baseMint, trade.quoteMint])
+        )
+        .flat()
+    )
+  );
+
+  const dbTokens = await db.getTokens(uniqueTokens);
+
+  const unknownTokens = uniqueTokens.filter(
+    (token) => !dbTokens.find((dbToken) => dbToken.address === token)
+  );
+
+  if (unknownTokens.length === 0) {
+    return dbTokens
+  }
+
+  console.log("unknownTokens", unknownTokens);
+
+  const tokensMetadata = await getTokensMetadata(unknownTokens);
+
+  await db.createTokens(tokensMetadata);
+
+  return tokensMetadata;
+};
+
 const getBundlesStatistics = (
   bundles: MevBundleWithProfit[]
 ): BundlesStatistics => {
+  console.log("getting stats");
   if (bundles.length === 0) {
     return {} as BundlesStatistics;
   }
@@ -194,4 +211,5 @@ export default {
   getMEVBundles,
   getBundlesStatistics,
   checkForNewBundles,
+  fillMissingTokens,
 };

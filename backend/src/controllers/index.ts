@@ -7,6 +7,7 @@ const getBundles = async (
   request: FastifyRequest<{ Querystring: GetMEVBundlesParams }>,
   reply: FastifyReply
 ) => {
+  console.log("getting bundles");
   const bundles = await bundlesService.getMEVBundles({
     period: request.query.period,
     mevType: request.query.mevType,
@@ -16,6 +17,7 @@ const getBundles = async (
     orderDirection: request.query.orderDirection,
     noLimit: request.query.noLimit,
   });
+  console.log("got bundles");
 
   const jsonString = toJSONString(bundles);
 
@@ -26,14 +28,15 @@ const getStatistics = async (
   request: FastifyRequest<{ Querystring: GetMEVBundlesParams }>,
   reply: FastifyReply
 ) => {
+  console.log("getting statistics");
   const bundles = await bundlesService.getMEVBundles({
     period: request.query.period,
     mevType: request.query.mevType,
     noLimit: true,
   });
-
+  console.log("got statistics");
   const stats = bundlesService.getBundlesStatistics(bundles);
-
+  console.log("formatted statistics");
   const jsonString = toJSONString(stats);
 
   return reply.status(200).send(jsonString);

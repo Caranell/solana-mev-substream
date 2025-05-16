@@ -7,9 +7,15 @@ export const TIME_FILTERS: { value: TimeFilter; label: string }[] = [
 ];
 
 export const TIME_MAPPING = {
-  ONE_DAY: "1D",
-  ONE_WEEK: "7D",
-  TWO_WEEKS: "14D",
+  '1D': '1',
+  '7D': '7',
+  '14D': '14',
+}
+
+export const TIME_MAPPING_LABELS = {
+  '1': '1D',
+  '7': '7D',
+  '14': '14D',
 };
 
 export const MEV_TYPES = {

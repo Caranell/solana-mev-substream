@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { StatsSummary } from "@/components/dashboard/stats-summary";
-import { TransactionTable } from "@/components/transactions/transaction-table";
+import { BundlesTable } from "@/components/transactions/bundles-table";
 import { TransactionStream } from "@/components/transactions/transaction-stream";
 import { TimeFilterButtons } from "@/components/dashboard/time-filter";
-import { MEV_TYPES, TIME_FILTERS, TIME_MAPPING } from "@/lib/constants";
+import {
+  MEV_TYPES,
+  TIME_FILTERS,
+  TIME_MAPPING,
+  TIME_MAPPING_VALUES,
+} from "@/lib/constants";
 import { TimeFilter } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery } from "@tanstack/react-query";
 import { getBundles, getStatistics } from "@/lib/api";
-
 
 const MEV_TYPES_LABELS = {
   [MEV_TYPES.ARBITRAGE]: "🔄 Arbitrages",
@@ -16,10 +20,7 @@ const MEV_TYPES_LABELS = {
 };
 
 export function Dashboard() {
-  console.log('dashboard')
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>(
-    TIME_MAPPING.ONE_WEEK as TimeFilter
-  );
+  const [timeFilter, setTimeFilter] = useState<string>(TIME_MAPPING["7D"]);
   const [txType, setTxType] = useState(MEV_TYPES.ARBITRAGE);
 
   const { data: transactions } = useQuery({
@@ -72,10 +73,10 @@ export function Dashboard() {
           <StatsSummary data={stats} transactionType={MEV_TYPES.SANDWICH} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
-              <TransactionTable
-                transactions={transactions || []}
+              <BundlesTable
+                bundles={transactions || []}
                 title="Sandwiches"
-                transactionType="sandwich"
+                transactionType={MEV_TYPES.SANDWICH}
                 timeFilter={timeFilter}
               />
             </div>
@@ -88,11 +89,12 @@ export function Dashboard() {
           <StatsSummary data={stats} transactionType={MEV_TYPES.ARBITRAGE} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
-              <TransactionTable
-                transactions={transactions || []}
+              <BundlesTable
+                bundles={transactions || []}
                 title="Arbitrages"
-                transactionType="arbitrage"
+                transactionType={MEV_TYPES.ARBITRAGE}
                 timeFilter={timeFilter}
+                timeFilterLabel={TIME_MAPPING[timeFilter]}
               />
             </div>
             <div>

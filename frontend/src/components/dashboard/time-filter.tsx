@@ -9,18 +9,16 @@ interface TimeFilterProps {
 }
 
 export function TimeFilterButtons({ filters, activeFilter, onChange }: TimeFilterProps) {
-  console.log('active', activeFilter)
-  console.log('filters', filters)
   return (
     <div className="flex items-center space-x-2">
       {filters.map((filter) => (
         <Button
           key={filter.value}
-          variant={activeFilter === filter.label ? 'default' : 'outline'}
+          variant={activeFilter === filter.value ? 'default' : 'outline'}
           size="sm"
           onClick={() => onChange(filter.value)}
           className={cn(
-            activeFilter === filter.label ? 'bg-primary text-primary-foreground' : '',
+            activeFilter === filter.value ? 'bg-primary text-primary-foreground' : '',
             'transition-all'
           )}
         >
