@@ -8,3 +8,4 @@ buf.gen.yaml
 *.json
 *.js
 !tl-solana-dex-trades-extended-1-0-6-v1.0.6.spkg
+!solana-mev-bundles-1-0-0-v1.0.0.spkg
