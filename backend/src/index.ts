@@ -8,7 +8,7 @@ import mevBundlesController from "./controllers/index";
 import mevBundlesService from "./services/mevBundles";
 import { toJSONString } from "./controllers/utils";
 
-const SOCKET_UPDATE_INTERVAL = 500;
+const SOCKET_UPDATE_INTERVAL = 2000;
 
 const app = fastify({ logger: true });
 
