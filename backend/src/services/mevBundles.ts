@@ -90,6 +90,8 @@ const getBundlesStatistics = async (
 
   console.log("mevType", mevType);
 
+  console.log("BUNDLES", bundles.length);
+
   const baseStats: BaseBundlesStatistics = {
     numberOfBundles: bundles.length,
     numberOfTransactions: bundles.reduce(

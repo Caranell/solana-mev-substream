@@ -52,7 +52,7 @@ app.register(async function (fastify) {
 
 setInterval(async () => {
   try {
-    console.log('checkiong')
+    console.log("checking");
     const newBundle = await mevBundlesService.checkForNewBundles();
     if (newBundle) {
       console.log(`Found new bundle. Notifying clients...`);
@@ -71,7 +71,7 @@ setInterval(async () => {
   }
 }, SOCKET_UPDATE_INTERVAL);
 
-app.listen({host: "::", port: Number(process.env.PORT) }, (err) => {
+app.listen({ host: "::", port: Number(process.env.PORT) }, (err) => {
   if (err) {
     console.error(err);
     process.exit(1);

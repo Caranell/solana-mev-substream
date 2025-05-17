@@ -60,6 +60,7 @@ export const getTopSearchers = (
 export const getTopBundles = (
   bundles: MevBundleWithTrades[]
 ): MevBundleWithTrades[] => {
+  console.log("BUNDLES!!!", bundles.length);
   const sortedBundles = bundles.toSorted((a, b) => b.profit - a.profit);
 
   return sortedBundles;
