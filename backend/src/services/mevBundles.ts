@@ -146,7 +146,7 @@ const getSanwichBundlesStatistics = async (
   const uniqueVictims = Array.from(
     new Set(
       bundles.map((bundle) => {
-        const trades = bundle.trades.toSorted((a, b) => a.txIndex - b.txIndex);
+        const trades = bundle.trades.sort((a, b) => a.txIndex - b.txIndex);
         const victim = trades[1].signer;
 
         return victim;
@@ -157,7 +157,7 @@ const getSanwichBundlesStatistics = async (
   const uniqueAttackers = Array.from(
     new Set(
       bundles.map((bundle) => {
-        const trades = bundle.trades.toSorted((a, b) => a.txIndex - b.txIndex);
+        const trades = bundle.trades.sort((a, b) => a.txIndex - b.txIndex);
         const attacker = trades[0].signer;
 
         return attacker;

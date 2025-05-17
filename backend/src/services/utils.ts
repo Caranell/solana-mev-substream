@@ -61,7 +61,7 @@ export const getTopBundles = (
   bundles: MevBundleWithTrades[]
 ): MevBundleWithTrades[] => {
   console.log("BUNDLES!!!", bundles.length);
-  const sortedBundles = bundles.toSorted((a, b) => b.profit - a.profit);
+  const sortedBundles = bundles.sort((a, b) => b.profit - a.profit);
 
   return sortedBundles;
 };
@@ -170,7 +170,7 @@ export const getTopArbitrageTokens = (
   //   };
   // });
 
-  const sortedTokens = tokensArr.toSorted((a, b) => b.profit - a.profit);
+  const sortedTokens = tokensArr.sort((a, b) => b.profit - a.profit);
 
   return sortedTokens;
 };
@@ -219,7 +219,7 @@ export const getTopArbitragePrograms = (
           program.program.includes(trait)
         )
     )
-    .toSorted((a, b) => b.profit - a.profit);
+    .sort((a, b) => b.profit - a.profit);
 
   return sortedPrograms;
 };
