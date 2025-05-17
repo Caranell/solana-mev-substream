@@ -18,7 +18,7 @@ const MEV_TYPES_LABELS = {
 
 export function Dashboard() {
   const [timeFilter, setTimeFilter] = useState<string>(TIME_MAPPING["1D"]);
-  const [mevType, setMevType] = useState(MEV_TYPES.ARBITRAGE);
+  const [mevType, setMevType] = useState(MEV_TYPES.SANDWICH);
 
   const { data: transactions } = useQuery({
     queryKey: ["transactions", timeFilter, mevType],
