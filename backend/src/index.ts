@@ -52,7 +52,6 @@ app.register(async function (fastify) {
 
 setInterval(async () => {
   try {
-    console.log("checking");
     const newBundle = await mevBundlesService.checkForNewBundles();
     if (newBundle) {
       console.log(`Found new bundle. Notifying clients...`);

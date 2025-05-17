@@ -5,20 +5,23 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const getBundles = async ({
   period,
   mevType,
-  // // orderBy,
-  // orderDirection,
+  limit = 50,
+  orderBy = "profit",
+  orderDirection = "desc",
 }: {
   period: string;
   mevType: string;
-  // orderBy?: string;
-  // orderDirection?: string;
+  limit?: number;
+  orderBy?: string;
+  orderDirection?: string;
 }) => {
   const response = await axios.get(`${API_URL}/bundles`, {
     params: {
       period,
       mevType,
-      // orderBy,
-      // orderDirection,
+      limit,
+      orderBy,
+      orderDirection,
     },
   });
 

@@ -66,7 +66,7 @@ const fillMissingTokens = async (bundles: MevBundleWithTrades[]) => {
   );
 
   if (unknownTokens.length === 0) {
-    return dbTokens
+    return dbTokens;
   }
 
   console.log("unknownTokens", unknownTokens);
@@ -180,8 +180,12 @@ const checkForNewBundles = async () => {
   const latestBundle = await getLatestBundle();
 
   if (latestBundle && latestBundle.bundleId !== lastBundleCacheId) {
-    lastBundleCacheId = latestBundle.bundleId;
-    return latestBundle;
+    if (lastBundleCacheId !== null) {
+      lastBundleCacheId = latestBundle.bundleId;
+      return latestBundle;
+    } else {
+      lastBundleCacheId = latestBundle.bundleId;
+    }
   }
 
   return null;

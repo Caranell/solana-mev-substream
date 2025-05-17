@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import bundlesService from "../services/mevBundles";
 import { GetMEVBundlesParams } from "../types";
 import { toJSONString } from "./utils";
+import database from "../services/database";
 
 const getBundles = async (
   request: FastifyRequest<{ Querystring: GetMEVBundlesParams }>,
@@ -19,7 +20,21 @@ const getBundles = async (
   });
   console.log("got bundles");
 
-  const jsonString = toJSONString(bundles);
+  const tradedTokens = bundles.map((bundle) =>
+    bundle.trades.map((trade) => [trade.baseMint, trade.quoteMint])
+  );
+  const tokenSymbols = await database.getTokens(tradedTokens.flat(2));
+
+    const enrichedBundles = bundles.map((bundle) => ({
+      ...bundle,
+      trades: bundle.trades.map((trade) => ({
+        ...trade,
+        baseTokenSymbol: tokenSymbols.find((token) => token.address === trade.baseMint)?.symbol,
+        quoteTokenSymbol: tokenSymbols.find((token) => token.address === trade.quoteMint)?.symbol,
+      })),
+    }));
+
+  const jsonString = toJSONString(enrichedBundles);
 
   return reply.status(200).send(jsonString);
 };

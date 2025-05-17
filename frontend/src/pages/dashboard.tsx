@@ -38,6 +38,18 @@ export function Dashboard() {
       }),
   });
 
+  const { data: lastBundles } = useQuery({
+    queryKey: ["lastBundles", timeFilter, mevType],
+    queryFn: () =>
+      getBundles({
+        period: timeFilter,
+        mevType: mevType,
+        limit: 5,
+        orderDirection: "desc",
+        orderBy: "blockSlot",
+      }),
+  });
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-between items-start">
@@ -78,7 +90,7 @@ export function Dashboard() {
               />
             </div>
             <div>
-              <TransactionStream mevType={MEV_TYPES.SANDWICH} />
+              <TransactionStream mevType={MEV_TYPES.SANDWICH} lastBundles={lastBundles || []} />
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -110,7 +122,7 @@ export function Dashboard() {
               />
             </div>
             <div>
-              <TransactionStream mevType={MEV_TYPES.ARBITRAGE} />
+              <TransactionStream mevType={MEV_TYPES.ARBITRAGE} lastBundles={lastBundles || []} />
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

@@ -4,10 +4,20 @@ import { Badge } from "@/components/ui/badge";
 import { useSocket } from "@/context/socket-context";
 import { MEV_TYPES } from "@/lib/constants";
 import { formatNumber } from "@/lib/utils";
-// import { ArrowRight } from "lucide-react";
-export function TransactionStream({ mevType }: { mevType: string }) {
+
+export function TransactionStream({
+  lastBundles,
+  mevType,
+}: {
+  // @ts-ignore
+  lastBundles: any[];
+  mevType: string;
+}) {
   const { recentBundles } = useSocket();
-  const bundles = recentBundles.filter((bundle) => bundle.mevType === mevType);
+  const bundles =
+    recentBundles.length > 0
+      ? recentBundles.filter((bundle) => bundle.mevType === mevType)
+      : lastBundles;
 
   return (
     <Card>
@@ -57,41 +67,12 @@ export function TransactionStream({ mevType }: { mevType: string }) {
                     <div className="text-xs text-muted-foreground">
                       Sandwich Attack
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center text-sm">
-                        <Badge
-                          variant="outline"
-                          className="bg-red-50 text-red-700 border-red-200"
-                        >
-                          Attacker (Front)
-                        </Badge>
-                        <span className="ml-auto text-xs font-mono">
-                          {bundle.frontTx?.substring(0, 8) || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <Badge
-                          variant="outline"
-                          className="bg-yellow-50 text-yellow-700 border-yellow-200"
-                        >
-                          Victim
-                        </Badge>
-                        <span className="ml-auto text-xs font-mono">
-                          {bundle.victimTx?.substring(0, 8) || "N/A"}
-                        </span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <Badge
-                          variant="outline"
-                          className="bg-red-50 text-red-700 border-red-200"
-                        >
-                          Attacker (Back)
-                        </Badge>
-                        <span className="ml-auto text-xs font-mono">
-                          {bundle.backTx?.substring(0, 8) || "N/A"}
-                        </span>
-                      </div>
-                    </div>
+
+                    {bundle.trades?.map((trade: any, index: number) => (
+                      <SandwichTrade key={index} trade={trade} index={index} />
+                    )) || (
+                      <div className="text-sm">No trade data available</div>
+                    )}
                   </div>
                 )}
               </div>
@@ -127,23 +108,67 @@ export function TransactionStream({ mevType }: { mevType: string }) {
 
 // @ts-ignore
 const Trade = ({ trade, index }: { trade: any; index: number }) => {
-  // get first token (negative amount)
+  const [firstToken, secondToken] = getTokensFromTrade(trade);
+  const [firstTokenAmount, secondTokenAmount] = getTokenAmountsFromTrade(trade);
+
+  console.log("index", index);
+  return (
+    <div key={index} className="flex items-center gap-1 text-sm">
+      <span className="font-medium">{`${firstToken} → ${secondToken}`}</span>
+
+      <span className="text-xs text-muted-foreground ml-auto">
+        {formatNumber(firstTokenAmount, 4)} →{" "}
+        {formatNumber(secondTokenAmount, 4)}
+      </span>
+    </div>
+  );
+};
+
+const SandwichTrade = ({ trade, index }: { trade: any; index: number }) => {
+  console.log("trade", trade);
+  const [firstToken, secondToken] = getTokensFromTrade(trade);
+  const [firstTokenAmount, secondTokenAmount] = getTokenAmountsFromTrade(trade);
+
+  return (
+    <div key={index} className="flex items-center gap-1 text-sm">
+      <span className="font-medium">{`${firstToken} → ${secondToken}`}</span>
+      {index % 2 === 0 ? (
+        <Badge
+          variant="outline"
+          className="bg-red-50 text-red-700 border-red-200"
+        >
+          Attacker
+        </Badge>
+      ) : (
+        <Badge
+          variant="outline"
+          className="bg-yellow-50 text-yellow-700 border-yellow-200"
+        >
+          Victim
+        </Badge>
+      )}
+      <span className="text-xs text-muted-foreground ml-auto">
+        {formatNumber(firstTokenAmount, 4)} →{" "}
+        {formatNumber(secondTokenAmount, 4)}
+      </span>
+    </div>
+  );
+};
+
+const getTokensFromTrade = (trade: any) => {
   const firstToken =
     trade.baseAmount < 0 ? trade.baseTokenSymbol : trade.quoteTokenSymbol;
   const secondToken =
     trade.baseAmount < 0 ? trade.quoteTokenSymbol : trade.baseTokenSymbol;
 
+  return [firstToken, secondToken];
+};
+
+const getTokenAmountsFromTrade = (trade: any) => {
   const firstTokenAmount =
     trade.baseAmount < 0 ? trade.baseAmount : trade.quoteAmount;
   const secondTokenAmount =
     trade.baseAmount < 0 ? trade.quoteAmount : trade.baseAmount;
 
-  return (
-    <div key={index} className="flex items-center gap-1 text-sm">
-      <span className="font-medium">{`${firstToken} → ${secondToken}`}</span>
-      <span className="text-xs text-muted-foreground ml-auto">
-        {formatNumber(firstTokenAmount, 4)} → {formatNumber(secondTokenAmount,4)}
-      </span>
-    </div>
-  );
+  return [firstTokenAmount, secondTokenAmount];
 };

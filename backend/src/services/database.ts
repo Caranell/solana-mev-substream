@@ -58,7 +58,6 @@ const getTokenSymbol = async (tokenAddress: string) => {
 };
 
 const getTokens = async (tokens: string[]) => {
-  console.log('tokens', tokens)
   const dbTokens = await prisma.tokens.findMany({
     where: {
       address: { in: tokens },
@@ -86,7 +85,7 @@ const getMEVBundles = async ({
   
 
   if (noLimit === false && limit) {
-    queryOptions.take = limit;
+    queryOptions.take = Number(limit);
   }
 
   if (offset) {
