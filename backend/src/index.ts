@@ -71,7 +71,7 @@ setInterval(async () => {
   }
 }, SOCKET_UPDATE_INTERVAL);
 
-app.listen({ port: Number(process.env.PORT) }, (err) => {
+app.listen({host: "::", port: Number(process.env.PORT) }, (err) => {
   if (err) {
     console.error(err);
     process.exit(1);
